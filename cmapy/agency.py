@@ -3,11 +3,12 @@ import socket
 import http.server as server
 import threading
 import time
+import cmapy.schemas
 
 class AgencyHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/api/agency":
-            pass
+            self.handle_get_agency()
         elif self.path == "/api/agency/agents":
             pass
         elif self.path == "/api/agency/msgs":
@@ -21,19 +22,33 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         print(self.path)
         print(self.server.agency.hostname)
         self.send_response(200)
+
+    def handle_get_agency(self):
+        pass
+    
     def do_POST(self):
         if self.path == "/api/agency":
             pass
         elif self.path == "/api/agency/agents":
-            pass
+            self.handle_post_agent()
         elif self.path == "/api/agency/msgs":
-            pass
+            self.handle_post_msgs()
         elif self.path == "/api/agency/msgundeliv":
-            pass
+            self.handle_post_uneliv_msg()
         elif self.path == "/api/agency/agents":
             pass
         else:
             pass
+
+    def handle_post_agent(self):
+        pass
+
+    def handle_post_msgs(self):
+        pass
+
+    def handle_post_uneliv_msg(self):
+        pass
+
     def do_DELETE(self):
         if self.path == "/api/agency":
             pass
@@ -47,6 +62,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             pass
         else:
             pass
+
+    def handle_delete_agent(self):
+        pass
 
 class Agency:
     def __init__(self):
@@ -78,6 +96,8 @@ class Agency:
         self.httpd.serve_forever()
 
 if __name__ == "__main__":
-    ag = Agency()
-    time.sleep(5)
-    print("Still here")
+    # ag = Agency()
+    # time.sleep(5)
+    # print("Still here")
+    log = cmapy.schemas.LogConfig()
+    print(log.to_json())

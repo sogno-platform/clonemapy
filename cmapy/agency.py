@@ -101,6 +101,8 @@ if __name__ == "__main__":
     # print("Still here")
     log = cmapy.schemas.LogConfig()
     print(log.to_json())
+    js = log.to_json()
+    log.from_json(js)
     status = cmapy.schemas.Status()
     print(status.to_json())
     ag_spec = cmapy.schemas.AgencyConfig()

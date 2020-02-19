@@ -219,3 +219,70 @@ class AgencyConfig():
     def from_json(self, js):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
+class ACLMessage:
+    def __init__(self):
+        super().__init__()
+        self.timestamp = datetime.now()
+        self.performative = 0
+        self.sender = 0
+        self.agency_sender = ""
+        self.receiver = 0
+        self.agency_receiver = ""
+        self.reply_to = 0
+        self.content = ""
+        self.language = ""
+        self.encoding = ""
+        self.ontology = ""
+        self.protocol = 0
+        self.conversation_id = 0
+        self.reply_with = ""
+        self.in_reply_to = 0
+        self.reply_by = datetime.now()
+
+    def to_json_dict(self):
+        js_dict = {"ts": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"), "perf": self.performative,
+            "sender": self.sender, "agencys": self.agency_sender, "receiver": self.receiver,
+            "agencyr": self.agency_receiver, "content": self.content, "prot": self.protocol}
+        if self.reply_to != 0:
+            js_dict["repto"] = self.reply_to
+        if self.language != "":
+            js_dict["lang"] = self.language
+        if self.encoding != "":
+            js_dict["enc"] = self.encoding
+        if self.ontology != "":
+            js_dict["ont"] = self.ontology
+        if self.conversation_id != 0:
+            js_dict["convid"] = self.conversation_id
+        if self.reply_with != "":
+            js_dict["repwith"] = self.reply_with
+        if self.in_reply_to != 0:
+            js_dict["inrepto"] = self.in_reply_to
+        return js_dict
+
+    def to_json(self):
+        js_dict = self.to_json_dict()
+        js_res = json.dumps(js_dict)
+        return js_res
+
+    def from_json_dict(self, js_dict):
+        self.timestamp = datetime.strptime(js_dict.get("ts", "0-0-0T0:0:0Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.performative = js_dict.get("perf", 0)
+        self.sender = js_dict.get("sender", 0)
+        self.agency_sender = js_dict.get("agencys", "")
+        self.receiver = js_dict.get("receiver", 0)
+        self.agency_receiver = js_dict.get("agencyr", "")
+        self.reply_to = js_dict.get("repto", 0)
+        self.content = js_dict.get("content", "")
+        self.language = js_dict.get("lang", "")
+        self.encoding = js_dict.get("enc", "")
+        self.ontology = js_dict.get("ont", "")
+        self.protocol = js_dict.get("prot", 0)
+        self.conversation_id = js_dict.get("convid", 0)
+        self.reply_with = js_dict.get("repwith", "")
+        self.in_reply_to = js_dict.get("inrepto", 0)
+        self.reply_by = datetime.strptime(js_dict.get("repby", "0-0-0T0:0:0Z"), "%Y-%m-%dT%H:%M:%SZ")
+        
+    def from_json(self, js):
+        js_dict = json.loads(js)
+        self.from_json_dict(js_dict)

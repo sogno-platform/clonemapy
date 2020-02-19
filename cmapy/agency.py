@@ -2,9 +2,12 @@ import os
 import socket
 import http.server as server
 import threading
+import multiprocessing
 import time
+import json
 import cmapy.schemas as schemas
 import cmapy.ams as ams
+import cmapy.agent as agent
 
 class AgencyHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -45,7 +48,14 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         pass
 
     def handle_post_msgs(self):
-        pass
+        content_len = int(self.headers.get('Content-Length'))
+        body = self.rfile.read(content_len)
+        msg_dicts = json.loads(body)
+        msgs = []
+        for i in msg_dicts:
+            msg = schemas.ACLMessage()
+            msg.from_json_dict(i)
+            msgs.append(msg)
 
     def handle_post_uneliv_msg(self):
         pass
@@ -67,10 +77,17 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
     def handle_delete_agent(self):
         pass
 
-class Agency:
+class AgentHandler:
     def __init__(self):
         super().__init__()
+        self.msg_in = multiprocessing.Queue(100)
+
+class Agency:
+    def __init__(self, ag_class):
+        super().__init__()
         self.info = schemas.AgencyInfo()
+        self.ag_class = ag_class
+        self.agent_handler = {}
         try:
             log_type = os.environ['CLONEMAP_LOG_LEVEL']
             if log_type == "info":
@@ -87,7 +104,6 @@ class Agency:
         self.hostname = hostname
         if len(hostname) < 4:
             pass
-        print(hostname)
         self.info.spec.masid = int(hostname[1])
         self.info.spec.id = int(hostname[3])
         self.info.spec.name = temp + ".mas" + hostname[1] + "agencies"
@@ -102,17 +118,22 @@ class Agency:
         for i in conf.agents:
             self.create_agent(i)
     
-    def create_agent(self, agent):
-        print("Creating agent "+ str(agent.spec.id))
+    def create_agent(self, agentinfo):
+        ag_handler = AgentHandler()
+        ag = self.ag_class(agentinfo, ag_handler.msg_in)
+        p = multiprocessing.Process(target=ag.task)
+        p.start()
+        ag_handler.proc = p
+        self.agent_handler[agentinfo.spec.id] = ag_handler
 
     def listen(self):
         serv = server.HTTPServer
-        self.httpd = serv(('', 1111), AgencyHandler)
+        self.httpd = serv(('', 10000), AgencyHandler)
         self.httpd.agency = self
         self.httpd.serve_forever()
 
 if __name__ == "__main__":
-    ag = Agency()
+    ag = Agency(agent.Agent)
     # time.sleep(5)
     # print("Still here")
     # log = schemas.LogConfig()

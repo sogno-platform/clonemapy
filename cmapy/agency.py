@@ -3,7 +3,8 @@ import socket
 import http.server as server
 import threading
 import time
-import cmapy.schemas
+import cmapy.schemas as schemas
+import cmapy.ams as ams
 
 class AgencyHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -69,6 +70,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
 class Agency:
     def __init__(self):
         super().__init__()
+        self.info = schemas.AgencyInfo()
         try:
             log_type = os.environ['CLONEMAP_LOG_LEVEL']
             if log_type == "info":
@@ -86,8 +88,22 @@ class Agency:
         if len(hostname) < 4:
             pass
         print(hostname)
+        self.info.spec.masid = int(hostname[1])
+        self.info.spec.id = int(hostname[3])
+        self.info.spec.name = temp + ".mas" + hostname[1] + "agencies"
+
         x = threading.Thread(target=self.listen)
         x.start()
+        self.start_agents()
+
+    def start_agents(self):
+        conf = ams.get_agency_config(self.info.spec.masid, self.info.spec.id)
+        self.info.spec.logger = conf.spec.logger
+        for i in conf.agents:
+            self.create_agent(i)
+    
+    def create_agent(self, agent):
+        print("Creating agent "+ str(agent.spec.id))
 
     def listen(self):
         serv = server.HTTPServer
@@ -96,16 +112,16 @@ class Agency:
         self.httpd.serve_forever()
 
 if __name__ == "__main__":
-    # ag = Agency()
+    ag = Agency()
     # time.sleep(5)
     # print("Still here")
-    log = cmapy.schemas.LogConfig()
-    print(log.to_json())
-    js = log.to_json()
-    log.from_json(js)
-    status = cmapy.schemas.Status()
-    print(status.to_json())
-    ag_spec = cmapy.schemas.AgencyConfig()
-    ag_spec.agents.append(cmapy.schemas.AgentInfo())
-    ag_spec.agents.append(cmapy.schemas.AgentInfo())
-    print(ag_spec.to_json())
+    # log = schemas.LogConfig()
+    # print(log.to_json())
+    # js = log.to_json()
+    # log.from_json(js)
+    # status = schemas.Status()
+    # print(status.to_json())
+    # ag_spec = schemas.AgencyConfig()
+    # ag_spec.agents.append(schemas.AgentInfo())
+    # ag_spec.agents.append(schemas.AgentInfo())
+    # print(ag_spec.to_json())

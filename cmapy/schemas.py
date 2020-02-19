@@ -19,10 +19,10 @@ class LogConfig():
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.msg = js_dict["msg"]
-        self.app = js_dict["app"]
-        self.status = js_dict["status"]
-        self.debug = js_dict["debug"]
+        self.msg = js_dict.get("msg", False)
+        self.app = js_dict.get("app", False)
+        self.status = js_dict.get("status", False)
+        self.debug = js_dict.get("debug", False)
 
     def from_json(self, js):
         js_dict = json.loads(js)
@@ -35,7 +35,7 @@ class Status():
         self.last_update = datetime.now()
 
     def to_json_dict(self):
-        js_dict = {"code": self.code, "lastupdate": self.last_update.strftime("%Y-%m-%d %H:%M:%S")}
+        js_dict = {"code": self.code, "lastupdate": self.last_update.strftime("%Y-%m-%dT%H:%M:%SZ")}
         return js_dict
 
     def to_json(self):
@@ -44,8 +44,9 @@ class Status():
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.code = js_dict["code"]
-        self.last_update = datetime.strptime(js_dict["lastupdate"], "%Y-%m-%d %H:%M:%S")
+        self.code = js_dict.get("code", 0)
+        self.last_update = datetime.strptime(js_dict.get("lastupdate", "0-0-0T0:0:0Z"),
+            "%Y-%m-%dT%H:%M:%SZ")
 
     def from_json(self, js):
         js_dict = json.loads(js)
@@ -71,11 +72,11 @@ class AgencySpec():
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.masid = js_dict["masid"]
-        self.name = js_dict["name"]
-        self.id = js_dict["id"]
-        self.logger.from_json_dict(js_dict["log"])
-        self.agents = js_dict["agents"]
+        self.masid = js_dict.get("masid", 0)
+        self.name = js_dict.get("name", "")
+        self.id = js_dict.get("id", 0)
+        self.logger.from_json_dict(js_dict.get("log", LogConfig()))
+        self.agents = js_dict.get("agents", [])
 
     def from_json(self, js):
         js_dict = json.loads(js)
@@ -97,8 +98,8 @@ class AgencyInfo():
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.spec.from_json_dict(js_dict["spec"])
-        self.status.from_json_dict(js_dict["status"])
+        self.spec.from_json_dict(js_dict.get("spec", AgencySpec()))
+        self.status.from_json_dict(js_dict.get("status", Status()))
 
     def from_json(self, js):
         js_dict = json.loads(js)
@@ -128,14 +129,14 @@ class AgentSpec():
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.masid = js_dict["masid"]
-        self.agencyid = js_dict["agencyid"]
-        self.nodeid = js_dict["nodeid"]
-        self.id = js_dict["id"]
-        self.name = js_dict["name"]
-        self.type = js_dict["type"]
-        self.subtype = js_dict["subtype"]
-        self.custom = js_dict["custom"]
+        self.masid = js_dict.get("masid", 0)
+        self.agencyid = js_dict.get("agencyid", 0)
+        self.nodeid = js_dict.get("nodeid", 0)
+        self.id = js_dict.get("id", 0)
+        self.name = js_dict.get("name", "")
+        self.type = js_dict.get("type", "")
+        self.subtype = js_dict.get("subtype", "")
+        self.custom = js_dict.get("custom", "")
 
     def from_json(self, js):
         js_dict = json.loads(js)
@@ -156,7 +157,7 @@ class Address():
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.agency = js_dict["agency"]
+        self.agency = js_dict.get("agency", "")
 
     def from_json(self, js):
         js_dict = json.loads(js)
@@ -180,9 +181,9 @@ class AgentInfo():
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.spec.from_json_dict(js_dict["spec"])
-        self.address.from_json_dict(js_dict["address"])
-        self.status.from_json_dict(js_dict["status"])
+        self.spec.from_json_dict(js_dict.get("spec", AgentSpec()))
+        self.address.from_json_dict(js_dict.get("address", Address()))
+        self.status.from_json_dict(js_dict.get("status", Status()))
 
     def from_json(self, js):
         js_dict = json.loads(js)
@@ -208,8 +209,8 @@ class AgencyConfig():
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.spec.from_json_dict(js_dict["spec"])
-        ag_dicts = js_dict["agents"]
+        self.spec.from_json_dict(js_dict.get("spec", AgentSpec()))
+        ag_dicts = js_dict.get("agents", [])
         for i in ag_dicts:
             ag = AgentInfo()
             ag.from_json_dict(i)

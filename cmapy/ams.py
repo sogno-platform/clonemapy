@@ -8,3 +8,9 @@ def get_agency_config(masid, agencyid):
     conf = schemas.AgencyConfig()
     conf.from_json(resp.text)
     return conf
+
+def get_agent_address(masid, agentid):
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)+"/address")
+    addr = schemas.Address()
+    addr.from_json(resp.text)
+    return addr

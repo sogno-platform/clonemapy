@@ -1,5 +1,11 @@
 import cmapy.schemas as schemas
 
+def agent_starter(ag_class, info, msg_in, msg_out):
+    print("Agent starter")
+    msg_out.put("45")
+    #ag = ag_class(info, msg_in, msg_out)
+    #ag.task()
+
 class Agent():
     def __init__(self, info, msg_in, msg_out):
         super().__init__()
@@ -12,15 +18,14 @@ class Agent():
         self.masid = info.spec.masid
         self.msg_in = msg_in
         self.msg_out = msg_out
-        #self.msg_out.put("42")
+        self.task()
 
     def task(self):
-        self.msg_out.put("42")
         print("This is agent "+ str(self.id))
         msg = schemas.ACLMessage()
         msg.content = "Message from agent "+ str(self.id)
         msg.receiver = (self.id+1)%2
-        #self.send_msg(msg)
+        self.send_msg(msg)
         # msg = self.recv_msg()
         # print(msg.content)
 
@@ -30,6 +35,5 @@ class Agent():
 
     def send_msg(self, msg):
         msg.sender = self.id
-        js = msg.to_json()
-        self.msg_out.put(js)
+        self.msg_out.put(msg)
         print("put msg")

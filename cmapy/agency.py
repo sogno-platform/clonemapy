@@ -6,6 +6,7 @@ import multiprocessing
 import time
 import json
 import requests
+import queue
 import cmapy.schemas as schemas
 import cmapy.ams as ams
 import cmapy.agent as agent
@@ -38,6 +39,8 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.handle_post_agent()
         elif self.path == "/api/agency/msgs":
             self.handle_post_msgs()
+            self.send_response(201)
+            self.end_headers()
         elif self.path == "/api/agency/msgundeliv":
             self.handle_post_uneliv_msg()
         elif self.path == "/api/agency/agents":
@@ -51,18 +54,19 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
     def handle_post_msgs(self):
         content_len = int(self.headers.get('Content-Length'))
         body = self.rfile.read(content_len)
-        msg_dicts = json.loads(body)
-        msgs = []
-        for i in msg_dicts:
-            msg = schemas.ACLMessage()
-            msg.from_json_dict(i)
-            msgs.append(msg)
-        for i in msgs:
-            self.server.agency.lock.acquire()
-            local_agent = self.server.agency.local_agents.get(i.receiver, None)
-            self.server.agency.lock.release()
-            if local_agent != None:
-                local_agent.msg_in.put(i)
+        print(str(body))
+        #msg_dicts = json.loads(str(body))
+        # msgs = []
+        # for i in msg_dicts:
+        #     msg = schemas.ACLMessage()
+        #     msg.from_json_dict(i)
+        #     msgs.append(msg)
+        # for i in msgs:
+        #     self.server.agency.lock.acquire()
+        #     local_agent = self.server.agency.local_agents.get(i.receiver, None)
+        #     self.server.agency.lock.release()
+        #     if local_agent != None:
+        #         local_agent.msg_in.put(i)
 
     def handle_post_uneliv_msg(self):
         pass
@@ -96,8 +100,9 @@ class Agency:
         self.ag_class = ag_class
         self.local_agents = {}
         self.msg_out = multiprocessing.Queue(1000)
-        self.lock = threading.Lock()
+        self.lock = multiprocessing.Lock()
         self.remote_agents = {}
+        self.remote_agencies = {}
         try:
             log_type = os.environ['CLONEMAP_LOG_LEVEL']
             if log_type == "info":
@@ -120,9 +125,9 @@ class Agency:
 
         x = threading.Thread(target=self.listen)
         x.start()
-        y = threading.Thread(target=self.send_msg, daemon=True)
-        y.start()
         self.start_agents()
+        time.sleep(5)
+        self.send_msg()
 
     def start_agents(self):
         conf = ams.get_agency_config(self.info.spec.masid, self.info.spec.id)
@@ -132,8 +137,7 @@ class Agency:
     
     def create_agent(self, agentinfo):
         ag_handler = AgentHandler()
-        ag = self.ag_class(agentinfo, ag_handler.msg_in, self.msg_out)
-        p = multiprocessing.Process(target=ag.task)
+        p = multiprocessing.Process(target=self.ag_class, args=(agentinfo, ag_handler.msg_in, self.msg_out,))
         p.start()
         ag_handler.proc = p
         self.lock.acquire()
@@ -147,34 +151,55 @@ class Agency:
         self.httpd.serve_forever()
 
     def send_msg(self):
-        print("send msg")
         while True:
             msg = self.msg_out.get()
-            print("msg msg msg")
-            break
-            # recv = msg.receiver
-            # self.lock.acquire()
-            # local_agent = self.local_agents.get(recv, None)
-            # recv_agency = self.remote_agents.get(recv, "")
-            # self.lock.release()
-            # if local_agent != None:
-            #     local_agent.msg_in.put(msg)
-            #     continue
-            # elif recv_agency == "":
-            #     self.lock.acquire()
-            #     masid = self.info.spec.masid
-            #     self.lock.release()
-            #     addr = ams.get_agent_address(masid, recv)
-            #     self.lock.acquire()
-            #     self.remote_agents[recv] = addr.agency
-            #     self.lock.release()
-            #     recv_agency = addr.agency
+            recv = msg.receiver
+            print(recv)
+            self.lock.acquire()
+            local_agent = self.local_agents.get(recv, None)
+            recv_agency = self.remote_agents.get(recv, None)
+            self.lock.release()
+            if local_agent != None:
+                local_agent.msg_in.put(msg)
+                print("Put msg to local agent")
+                continue
+            elif recv_agency == None:
+                self.lock.acquire()
+                masid = self.info.spec.masid
+                self.lock.release()
+                addr = ams.get_agent_address(masid, recv)
+                self.lock.acquire()
+                agency = self.remote_agencies.get(addr.agency, None)
+                self.lock.release()
+                if agency == None:
+                    agency = queue.Queue(1000)
+                    self.lock.acquire()
+                    self.remote_agencies[addr.agency] = agency
+                    self.lock.release()
+                    y = threading.Thread(target=remote_agency_sender, args=(addr.agency, agency,), daemon=True)
+                    y.start()
+                self.lock.acquire()
+                self.remote_agents[recv] = agency
+                self.lock.release()
+                recv_agency = agency
+            recv_agency.put(msg)
+            print("Put msg to remote agent")
             # msg_dict = msg.to_json_dict()
             # msg_dicts = []
             # msg_dicts.append(msg_dict)
             # js = json.dumps(msg_dicts)
             # resp = requests.post("http://"+recv_agency+":10000/api/agency/msgs", data=js)
 
+def remote_agency_sender(address, out):
+    msg = out.get()
+    msg_dict = msg.to_json_dict()
+    msg_dicts = []
+    msg_dicts.append(msg_dict)
+    js = json.dumps(msg_dicts)
+    print(address)
+    print(js)
+    resp = requests.post("http://"+address+":10000/api/agency/msgs", data=js)
+    print("sent msg")
 
 if __name__ == "__main__":
     ag = Agency(agent.Agent)

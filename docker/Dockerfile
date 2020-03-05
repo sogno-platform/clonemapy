@@ -4,4 +4,4 @@ WORKDIR /agency
 RUN pip install requests
 ENV PYTHONPATH=.
 COPY cmapy cmapy
-CMD ["python", "cmapy/agency.py"]
+CMD ["python", "-u", "cmapy/agency.py"]

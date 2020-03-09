@@ -2,6 +2,9 @@ import json
 from datetime import datetime
 
 class LogConfig():
+    """
+    contains configuration of logging service
+    """
     def __init__(self):
         super().__init__()
         self.msg = False
@@ -29,6 +32,9 @@ class LogConfig():
         self.from_json_dict(js_dict)
 
 class Status():
+    """
+    contains information about an agent's or agency's status
+    """
     def __init__(self):
         super().__init__()
         self.code = 0
@@ -53,6 +59,9 @@ class Status():
         self.from_json_dict(js_dict)
 
 class AgencySpec():
+    """
+    contains information about agency
+    """
     def __init__(self):
         super().__init__()
         self.masid = 0
@@ -83,6 +92,9 @@ class AgencySpec():
         self.from_json_dict(js_dict)
 
 class AgencyInfo():
+    """
+    contains information about agency spec and status
+    """
     def __init__(self):
         super().__init__()
         self.spec = AgencySpec()
@@ -106,6 +118,9 @@ class AgencyInfo():
         self.from_json_dict(js_dict)
 
 class AgentSpec():
+    """
+    contains information about a agent running in a MAS
+    """
     def __init__(self):
         super().__init__()
         self.masid = 0
@@ -143,6 +158,9 @@ class AgentSpec():
         self.from_json_dict(js_dict)
 
 class Address():
+    """
+    holds the address information of an agent
+    """
     def __init__(self):
         super().__init__()
         self.agency = ""
@@ -164,6 +182,9 @@ class Address():
         self.from_json_dict(js_dict)
 
 class AgentInfo():
+    """
+    contains information about agent spec, address, communication, mqtt and status
+    """
     def __init__(self):
         super().__init__()
         self.spec = AgentSpec()
@@ -190,6 +211,9 @@ class AgentInfo():
         self.from_json_dict(js_dict)
 
 class AgencyConfig():
+    """
+    contains information about agency spec and agents
+    """
     def __init__(self):
         super().__init__()
         self.spec = AgencySpec()
@@ -221,6 +245,9 @@ class AgencyConfig():
         self.from_json_dict(js_dict)
 
 class ACLMessage:
+    """
+    representing agent message
+    """
     def __init__(self):
         super().__init__()
         self.timestamp = datetime.now()

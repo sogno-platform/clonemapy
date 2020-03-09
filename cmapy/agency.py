@@ -12,7 +12,13 @@ import cmapy.ams as ams
 import cmapy.agent as agent
 
 class AgencyHandler(server.BaseHTTPRequestHandler):
+    """
+    Handles http requests to the agency
+    """
     def do_GET(self):
+        """
+        handler function for GET requests
+        """
         if self.path == "/api/agency":
             self.handle_get_agency()
         elif self.path == "/api/agency/agents":
@@ -33,6 +39,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         pass
     
     def do_POST(self):
+        """
+        handler function for POST requests
+        """
         if self.path == "/api/agency":
             pass
         elif self.path == "/api/agency/agents":
@@ -52,6 +61,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         pass
 
     def handle_post_msgs(self):
+        """
+        handler function for post requests to "/api/agency/msgs
+        """
         content_len = int(self.headers.get('Content-Length'))
         body = self.rfile.read(content_len)
         print(str(body, 'utf-8'))
@@ -72,6 +84,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         pass
 
     def do_DELETE(self):
+        """
+        handler function for DELETE requests
+        """
         if self.path == "/api/agency":
             pass
         elif self.path == "/api/agency/agents":
@@ -89,11 +104,17 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         pass
 
 class AgentHandler:
+    """
+    Contains the queue for incoming messages of local agents
+    """
     def __init__(self):
         super().__init__()
         self.msg_in = multiprocessing.Queue(100)
 
 class Agency:
+    """
+    Handles the http REST API and manages the agents
+    """
     def __init__(self, ag_class):
         super().__init__()
         self.info = schemas.AgencyInfo()
@@ -130,12 +151,18 @@ class Agency:
         self.send_msg()
 
     def start_agents(self):
+        """
+        Requests the agent configuration from the ams and starts the agents
+        """
         conf = ams.get_agency_config(self.info.spec.masid, self.info.spec.id)
         self.info.spec.logger = conf.spec.logger
         for i in conf.agents:
             self.create_agent(i)
     
     def create_agent(self, agentinfo):
+        """
+        execute agent in seperate process
+        """
         ag_handler = AgentHandler()
         p = multiprocessing.Process(target=self.ag_class, args=(agentinfo, ag_handler.msg_in, self.msg_out,))
         p.start()
@@ -145,12 +172,18 @@ class Agency:
         self.lock.release()
 
     def listen(self):
+        """
+        open http server
+        """
         serv = server.HTTPServer
         self.httpd = serv(('', 10000), AgencyHandler)
         self.httpd.agency = self
         self.httpd.serve_forever()
 
     def send_msg(self):
+        """
+        send messages from local agents
+        """
         while True:
             msg = self.msg_out.get()
             recv = msg.receiver
@@ -191,6 +224,9 @@ class Agency:
             # resp = requests.post("http://"+recv_agency+":10000/api/agency/msgs", data=js)
 
 def remote_agency_sender(address, out):
+    """
+    sender to remote agency; executed in seperate thread
+    """
     msg = out.get()
     msg_dict = msg.to_json_dict()
     msg_dicts = []

@@ -1,12 +1,9 @@
 import cmapy.schemas as schemas
 
-def agent_starter(ag_class, info, msg_in, msg_out):
-    print("Agent starter")
-    msg_out.put("45")
-    #ag = ag_class(info, msg_in, msg_out)
-    #ag.task()
-
 class Agent():
+    """
+    super class of agents
+    """
     def __init__(self, info, msg_in, msg_out):
         super().__init__()
         self.id = info.spec.id
@@ -21,6 +18,9 @@ class Agent():
         self.task()
 
     def task(self):
+        """
+        test behavior
+        """
         print("This is agent "+ str(self.id))
         msg = schemas.ACLMessage()
         msg.content = "Message from agent "+ str(self.id)
@@ -30,10 +30,16 @@ class Agent():
         print(msg.content)
 
     def recv_msg(self):
+        """
+        reads one message from incoming message queue; blocks if empty
+        """
         msg = self.msg_in.get()
         return msg
 
     def send_msg(self, msg):
+        """
+        sends message to receiver
+        """
         msg.sender = self.id
         self.msg_out.put(msg)
         print("put msg")

@@ -54,19 +54,19 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
     def handle_post_msgs(self):
         content_len = int(self.headers.get('Content-Length'))
         body = self.rfile.read(content_len)
-        print(str(body))
-        #msg_dicts = json.loads(str(body))
-        # msgs = []
-        # for i in msg_dicts:
-        #     msg = schemas.ACLMessage()
-        #     msg.from_json_dict(i)
-        #     msgs.append(msg)
-        # for i in msgs:
-        #     self.server.agency.lock.acquire()
-        #     local_agent = self.server.agency.local_agents.get(i.receiver, None)
-        #     self.server.agency.lock.release()
-        #     if local_agent != None:
-        #         local_agent.msg_in.put(i)
+        print(str(body, 'utf-8'))
+        msg_dicts = json.loads(str(body, 'utf-8'))
+        msgs = []
+        for i in msg_dicts:
+            msg = schemas.ACLMessage()
+            msg.from_json_dict(i)
+            msgs.append(msg)
+        for i in msgs:
+            self.server.agency.lock.acquire()
+            local_agent = self.server.agency.local_agents.get(i.receiver, None)
+            self.server.agency.lock.release()
+            if local_agent != None:
+                local_agent.msg_in.put(i)
 
     def handle_post_uneliv_msg(self):
         pass

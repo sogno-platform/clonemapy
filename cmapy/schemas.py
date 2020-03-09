@@ -45,7 +45,7 @@ class Status():
 
     def from_json_dict(self, js_dict):
         self.code = js_dict.get("code", 0)
-        self.last_update = datetime.strptime(js_dict.get("lastupdate", "0-0-0T0:0:0Z"),
+        self.last_update = datetime.strptime(js_dict.get("lastupdate", "0000-00-00T00:00:00Z"),
             "%Y-%m-%dT%H:%M:%SZ")
 
     def from_json(self, js):
@@ -266,7 +266,7 @@ class ACLMessage:
         return js_res
 
     def from_json_dict(self, js_dict):
-        self.timestamp = datetime.strptime(js_dict.get("ts", "0-0-0T0:0:0Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = datetime.strptime(js_dict.get("ts", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
         self.performative = js_dict.get("perf", 0)
         self.sender = js_dict.get("sender", 0)
         self.agency_sender = js_dict.get("agencys", "")
@@ -281,7 +281,7 @@ class ACLMessage:
         self.conversation_id = js_dict.get("convid", 0)
         self.reply_with = js_dict.get("repwith", "")
         self.in_reply_to = js_dict.get("inrepto", 0)
-        self.reply_by = datetime.strptime(js_dict.get("repby", "0-0-0T0:0:0Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.reply_by = datetime.strptime(js_dict.get("repby", "0001-01-01T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
         
     def from_json(self, js):
         js_dict = json.loads(js)

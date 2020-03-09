@@ -26,8 +26,8 @@ class Agent():
         msg.content = "Message from agent "+ str(self.id)
         msg.receiver = (self.id+1)%2
         self.send_msg(msg)
-        # msg = self.recv_msg()
-        # print(msg.content)
+        msg = self.recv_msg()
+        print(msg.content)
 
     def recv_msg(self):
         msg = self.msg_in.get()

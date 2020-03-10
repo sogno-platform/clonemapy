@@ -227,15 +227,16 @@ def remote_agency_sender(address, out):
     """
     sender to remote agency; executed in seperate thread
     """
-    msg = out.get()
-    msg_dict = msg.to_json_dict()
-    msg_dicts = []
-    msg_dicts.append(msg_dict)
-    js = json.dumps(msg_dicts)
-    print(address)
-    print(js)
-    resp = requests.post("http://"+address+":10000/api/agency/msgs", data=js)
-    print("sent msg")
+    while True:
+        msg = out.get()
+        msg_dict = msg.to_json_dict()
+        msg_dicts = []
+        msg_dicts.append(msg_dict)
+        js = json.dumps(msg_dicts)
+        print(address)
+        print(js)
+        resp = requests.post("http://"+address+":10000/api/agency/msgs", data=js)
+        print("sent msg")
 
 if __name__ == "__main__":
     ag = Agency(agent.Agent)

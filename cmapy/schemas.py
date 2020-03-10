@@ -313,3 +313,71 @@ class ACLMessage:
     def from_json(self, js):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
+class LogMessage:
+    """
+    representing log message
+    """
+    def __init__(self):
+        super().__init__()
+        self.masid = 0
+        self.agentid = 0
+        self.timestamp = datetime.now()
+        self.logtype = ""
+        self.message = ""
+        self.add_data = ""
+
+    def to_json_dict(self):
+        js_dict = {"masid": self.masid, "agentid": self.agentid, "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "logtype": self.logtype, "msg": self.message}
+        if self.add_data != "":
+            js_dict["data"] = self.add_data
+        return js_dict
+
+    def to_json(self):
+        js_dict = self.to_json_dict()
+        js_res = json.dumps(js_dict)
+        return js_res
+
+    def from_json_dict(self, js_dict):
+        self.masid = js_dict.get("masid", 0)
+        self.agentid = js_dict.get("agentid", 0)
+        self.timestamp = datetime.strptime(js_dict.get("timestamp", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.logtype = js_dict.get("logtype", "")
+        self.message = js_dict.get("message", "")
+        self.add_data = js_dict.get("data", "")
+        
+    def from_json(self, js):
+        js_dict = json.loads(js)
+        self.from_json_dict(js_dict)
+
+class State:
+    """
+    representing agent state
+    """
+    def __init__(self):
+        super().__init__()
+        self.masid = 0
+        self.agentid = 0
+        self.timestamp = datetime.now()
+        self.state = ""
+
+    def to_json_dict(self):
+        js_dict = {"masid": self.masid, "agentid": self.agentid, "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "state": self.state}
+        return js_dict
+
+    def to_json(self):
+        js_dict = self.to_json_dict()
+        js_res = json.dumps(js_dict)
+        return js_res
+
+    def from_json_dict(self, js_dict):
+        self.masid = js_dict.get("masid", 0)
+        self.agentid = js_dict.get("agentid", 0)
+        self.timestamp = datetime.strptime(js_dict.get("timestamp", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.state = js_dict.get("state", "")
+        
+    def from_json(self, js):
+        js_dict = json.loads(js)
+        self.from_json_dict(js_dict)

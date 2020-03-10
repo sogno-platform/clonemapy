@@ -21,3 +21,10 @@ def get_state(masid, agentid):
     state = schemas.State()
     state.from_json(resp.text)
     return state
+
+def send_logs(masid, log_queue):
+    while True:
+        log = log_queue.get()
+        logs = []
+        logs.append(log)
+        post_logs(masid, logs)

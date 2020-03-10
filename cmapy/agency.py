@@ -10,6 +10,7 @@ import queue
 import cmapy.schemas as schemas
 import cmapy.ams as ams
 import cmapy.agent as agent
+import cmapy.logger as logger
 
 class AgencyHandler(server.BaseHTTPRequestHandler):
     """
@@ -121,6 +122,7 @@ class Agency:
         self.ag_class = ag_class
         self.local_agents = {}
         self.msg_out = multiprocessing.Queue(1000)
+        self.log_out = multiprocessing.Queue(1000)
         self.lock = multiprocessing.Lock()
         self.remote_agents = {}
         self.remote_agencies = {}
@@ -146,6 +148,8 @@ class Agency:
 
         x = threading.Thread(target=self.listen)
         x.start()
+        y = threading.Thread(target=logger.send_logs, args=(self.info.spec.masid, self.log_out,))
+        y.start()
         self.start_agents()
         time.sleep(5)
         self.send_msg()
@@ -164,7 +168,7 @@ class Agency:
         execute agent in seperate process
         """
         ag_handler = AgentHandler()
-        p = multiprocessing.Process(target=self.ag_class, args=(agentinfo, ag_handler.msg_in, self.msg_out,))
+        p = multiprocessing.Process(target=self.ag_class, args=(agentinfo, ag_handler.msg_in, self.msg_out, self.log_out,))
         p.start()
         ag_handler.proc = p
         self.lock.acquire()

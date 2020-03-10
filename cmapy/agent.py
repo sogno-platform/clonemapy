@@ -4,7 +4,7 @@ class Agent():
     """
     super class of agents
     """
-    def __init__(self, info, msg_in, msg_out):
+    def __init__(self, info, msg_in, msg_out, log_out):
         super().__init__()
         self.id = info.spec.id
         self.nodeid = info.spec.nodeid
@@ -15,6 +15,7 @@ class Agent():
         self.masid = info.spec.masid
         self.msg_in = msg_in
         self.msg_out = msg_out
+        self.log_out = log_out
         self.task()
 
     def task(self):
@@ -43,3 +44,10 @@ class Agent():
         msg.sender = self.id
         self.msg_out.put(msg)
         print("put msg")
+
+    def new_log(logtype, msg, data):
+        log = schemas.LogMessage()
+        log.logtype = logtype
+        log.message = msg
+        log.add_data = data
+        self.log_out.put(log)

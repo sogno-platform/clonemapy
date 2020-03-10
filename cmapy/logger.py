@@ -25,6 +25,7 @@ def get_state(masid, agentid):
 def send_logs(masid, log_queue):
     while True:
         log = log_queue.get()
+        print("get log")
         logs = []
         logs.append(log)
         post_logs(masid, logs)

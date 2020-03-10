@@ -29,6 +29,7 @@ class Agent():
         self.send_msg(msg)
         msg = self.recv_msg()
         print(msg.content)
+        self.new_log("app", "Test log", "test data")
 
     def recv_msg(self):
         """
@@ -45,9 +46,12 @@ class Agent():
         self.msg_out.put(msg)
         print("put msg")
 
-    def new_log(logtype, msg, data):
+    def new_log(self, logtype, msg, data):
         log = schemas.LogMessage()
+        log.masid = self.masid
+        log.agentid = self.id
         log.logtype = logtype
         log.message = msg
         log.add_data = data
         self.log_out.put(log)
+        print("put log")

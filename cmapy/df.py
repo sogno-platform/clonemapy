@@ -14,6 +14,8 @@ def get_svc(masid, desc):
     resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc)
     svc_dicts = json.loads(resp.text)
     svcs = []
+    if svc_dicts == None:
+        return svcs
     for i in svc_dicts:
         svc = schemas.Service()
         svc.from_json_dict(i)
@@ -24,6 +26,8 @@ def get_local_svc(masid, desc, nodeid, dist):
     resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/"+str(dist))
     svc_dicts = json.loads(resp.text)
     svcs = []
+    if svc_dicts == None:
+        return svcs
     for i in svc_dicts:
         svc = schemas.Service()
         svc.from_json_dict(i)

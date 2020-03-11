@@ -33,6 +33,13 @@ class Agent():
         msg = self.recv_msg()
         print(msg.content)
         self.new_log("app", "Test log", "test data")
+        svc = schemas.Service()
+        svc.desc = "testsvc"
+        id = self.register_service(svc)
+        print(id)
+        temp = self.search_for_service("testsvc")
+        for i in temp:
+            print(i.desc)
 
     def recv_msg(self):
         """
@@ -67,6 +74,9 @@ class Agent():
             return
         svc.created = datetime.now()
         svc.changed = datetime.now()
+        svc.masid = self.masid
+        svc.agentid = self.id
+        svc.nodeid = self.nodeid
         svc = df.post_svc(self.masid, svc)
         self.registered_svcs[svc.desc] = svc
         return svc.id

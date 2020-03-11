@@ -1,4 +1,6 @@
+from datetime import datetime
 import cmapy.schemas as schemas
+import cmapy.df as df
 
 class Agent():
     """
@@ -13,6 +15,7 @@ class Agent():
         self.subtype = info.spec.subtype
         self.custom = info.spec.custom
         self.masid = info.spec.masid
+        self.registered_svcs = {}
         self.msg_in = msg_in
         self.msg_out = msg_out
         self.log_out = log_out
@@ -55,3 +58,42 @@ class Agent():
         log.add_data = data
         self.log_out.put(log)
         print("put log")
+
+    def register_service(self, svc):
+        if svc.desc == "":
+            return
+        temp = self.registered_svcs.get(svc.desc, None)
+        if temp != None:
+            return
+        svc.created = datetime.now()
+        svc.changed = datetime.now()
+        svc = df.post_svc(self.masid, svc)
+        self.registered_svcs[svc.desc] = svc
+        return svc.id
+
+    def search_for_service(self, desc):
+        temp = df.get_svc(self.masid, desc)
+        svcs = []
+        for i in temp:
+            if i.agentid != self.id:
+                svcs.append(i)
+        return svcs
+
+    def search_for_local_service(self, desc, dist):
+        temp = df.get_local_svc(self.masid, desc, self.nodeid, dist)
+        svcs = []
+        for i in temp:
+            if i.agentid != self.id:
+                svcs.append(i)
+        return svcs
+
+    def deregister_service(self, svcid):
+        desc = ""
+        for temp in self.registered_svcs:
+            if self.registered_svcs[temp].id == svcid:
+                desc = temp
+                break
+        if desc == "":
+            return
+        del self.registered_svcs[desc]
+        df.delete_svc(self.masid, svcid)

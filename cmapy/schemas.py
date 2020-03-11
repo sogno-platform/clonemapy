@@ -381,3 +381,43 @@ class State:
     def from_json(self, js):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
+class Service:
+    """
+    representing service
+    """
+    def __init__(self):
+        super().__init__()
+        self.id = ""
+        self.agentid = 0
+        self.nodeid = 0
+        self.masid = 0
+        self.created = datetime.now()
+        self.changed = datetime.now()
+        self.desc = ""
+        self.dist = 0.0
+
+    def to_json_dict(self):
+        js_dict = {"id": self.id, "agid": self.agentid, "nodeid": self.nodeid, "masid": self.masid,
+            "crat": self.created.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "chat": self.changed.strftime("%Y-%m-%dT%H:%M:%SZ"), "desc": self.desc, "dist": self.dist}
+        return js_dict
+
+    def to_json(self):
+        js_dict = self.to_json_dict()
+        js_res = json.dumps(js_dict)
+        return js_res
+
+    def from_json_dict(self, js_dict):
+        self.id = js_dict.get("id", "")
+        self.agentid = js_dict.get("agid", 0)
+        self.nodeid = js_dict.get("nodeid", 0)
+        self.masid = js_dict.get("masid", 0)
+        self.created = datetime.strptime(js_dict.get("crat", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.changed = datetime.strptime(js_dict.get("chat", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.desc = js_dict.get("desc", "")
+        self.dist = js_dict.get("dist", 0.0)
+        
+    def from_json(self, js):
+        js_dict = json.loads(js)
+        self.from_json_dict(js_dict)

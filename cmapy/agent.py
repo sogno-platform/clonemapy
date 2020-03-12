@@ -1,6 +1,7 @@
 from datetime import datetime
 import cmapy.schemas as schemas
 import cmapy.df as df
+import cmapy.iot as iot
 
 class Agent():
     """
@@ -19,6 +20,7 @@ class Agent():
         self.msg_in = msg_in
         self.msg_out = msg_out
         self.log_out = log_out
+        self.mqtt_client = iot.mqtt_connect()
         self.task()
 
     def task(self):
@@ -40,6 +42,12 @@ class Agent():
         temp = self.search_for_service("testsvc")
         for i in temp:
             print(i.desc)
+        self.mqtt_subscribe("testtopic")
+        self.mqtt_publish("testtopic", "testpayload"+str(self.id))
+        msg = self.mqtt_recv_msg()
+        print(msg.payload)
+        msg = self.mqtt_recv_msg()
+        print(msg.payload)
 
     def recv_msg(self):
         """
@@ -107,3 +115,13 @@ class Agent():
             return
         del self.registered_svcs[desc]
         df.delete_svc(self.masid, svcid)
+
+    def mqtt_subscribe(self, topic):
+        self.mqtt_client.subscribe(topic)
+
+    def mqtt_publish(self, topic, payload=None, qos=0, retain=False):
+        self.mqtt_client.publish(topic, payload, qos, retain)
+
+    def mqtt_recv_msg(self):
+        msg = self.mqtt_client.msg_in_queue.get()
+        return msg

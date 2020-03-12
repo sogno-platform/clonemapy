@@ -1,7 +1,7 @@
 FROM python:3.5.2
 
 WORKDIR /agency
-RUN pip install requests
-ENV PYTHONPATH=.
 COPY cmapy cmapy
+RUN pip install -r cmapy/requirements.txt
+ENV PYTHONPATH=.
 CMD ["python", "-u", "cmapy/agency.py"]

@@ -1,3 +1,15 @@
+"""
+This module implements an agency compliant with the cloneMAP API.
+
+Start the Agency by creating an object of the agency class. It takes the agent class that implements
+the agent behavior to be executed as input parameter. The agent class must be derived from Agent in 
+the agent module.
+
+The agency starts an http server which serves the cloneMAP agency API. The agency takes care of 
+starting each agent wihin a seperate process. Moreover, it manages the messaging among local and 
+remote agents.
+"""
+
 import os
 import socket
 import http.server as server
@@ -37,6 +49,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         self.send_response(200)
 
     def handle_get_agency(self):
+        """
+        handler function for GET request to /api/agency
+        """
         pass
     
     def do_POST(self):
@@ -59,11 +74,14 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             pass
 
     def handle_post_agent(self):
+        """
+        handler function for post request to /api/agency/agents
+        """
         pass
 
     def handle_post_msgs(self):
         """
-        handler function for post requests to "/api/agency/msgs
+        handler function for post requests to /api/agency/msgs
         """
         content_len = int(self.headers.get('Content-Length'))
         body = self.rfile.read(content_len)
@@ -82,6 +100,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
                 local_agent.msg_in.put(i)
 
     def handle_post_uneliv_msg(self):
+        """
+        handler function for post request to /api/agency/msgundeliv
+        """
         pass
 
     def do_DELETE(self):
@@ -102,6 +123,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             pass
 
     def handle_delete_agent(self):
+        """
+        handler function for delete request to /api/agency/agents/{agent-id}
+        """
         pass
 
 class AgentHandler:
@@ -114,7 +138,36 @@ class AgentHandler:
 
 class Agency:
     """
-    Handles the http REST API and manages the agents
+    Handles the http REST API and manages the agents as well as messaging among agents
+
+    Following threads are started
+    - one thread for http server
+    - one thread for sending of logs
+    - one thread for each remote agency for sending of messages
+
+    Following processes are started:
+    - one process for each agent
+
+    Attributes
+    ----------
+    info : schemas.AgencyInfo
+           information about the agency (agency name, agent configuration, ...)
+    ag_class : class derived from agent.Agent
+               implementation of agent behavior; one ag_class object for each agent is created in a 
+               seperate process
+    local_agents : dictionary of AgentHandler
+                   each local agent has a queue for incoming messages; this is stored in its handler
+    msg_out : multiprocessing.Queue
+              queue for outgoing messages
+    log_out : multiprocessing.Queue
+              queue for outgoing log messages
+    lock : multiprocessing.Lock
+           lock to protect variables from concurrent access
+    remote_agents : dictionary of queue.Queue
+                    stores the outgoing queue of remote (non-local) agents
+    remote_agencies : dictionary of queue.Queue
+                      stores the outgoing queue of remote agencies (sending to each remote agency is
+                      handled in a seperate thread)
     """
     def __init__(self, ag_class):
         super().__init__()
@@ -165,7 +218,7 @@ class Agency:
     
     def create_agent(self, agentinfo):
         """
-        execute agent in seperate process
+        executes agent in seperate process
         """
         ag_handler = AgentHandler()
         p = multiprocessing.Process(target=self.ag_class, args=(agentinfo, ag_handler.msg_in, self.msg_out, self.log_out,))
@@ -197,28 +250,35 @@ class Agency:
             recv_agency = self.remote_agents.get(recv, None)
             self.lock.release()
             if local_agent != None:
+                # agent is local -> add message to its queue
                 local_agent.msg_in.put(msg)
                 print("Put msg to local agent")
                 continue
             elif recv_agency == None:
+                # agent is non-local, but address of agent is unknown -> request agent address
                 self.lock.acquire()
                 masid = self.info.spec.masid
                 self.lock.release()
                 addr = ams.get_agent_address(masid, recv)
                 self.lock.acquire()
+                # check if agency of remote agent is known
                 agency = self.remote_agencies.get(addr.agency, None)
                 self.lock.release()
                 if agency == None:
+                    # remote agency is not known -> create a queue for messages to this agency and
+                    # start a sender in a new thread
                     agency = queue.Queue(1000)
                     self.lock.acquire()
                     self.remote_agencies[addr.agency] = agency
                     self.lock.release()
-                    y = threading.Thread(target=remote_agency_sender, args=(addr.agency, agency,), daemon=True)
+                    y = threading.Thread(target=remote_agency_sender, args=(addr.agency, agency,),
+                        daemon=True)
                     y.start()
                 self.lock.acquire()
                 self.remote_agents[recv] = agency
                 self.lock.release()
                 recv_agency = agency
+            # add message to queue of remote agent
             recv_agency.put(msg)
             print("Put msg to remote agent")
             # msg_dict = msg.to_json_dict()
@@ -244,15 +304,3 @@ def remote_agency_sender(address, out):
 
 if __name__ == "__main__":
     ag = Agency(agent.Agent)
-    # time.sleep(5)
-    # print("Still here")
-    # log = schemas.LogConfig()
-    # print(log.to_json())
-    # js = log.to_json()
-    # log.from_json(js)
-    # status = schemas.Status()
-    # print(status.to_json())
-    # ag_spec = schemas.AgencyConfig()
-    # ag_spec.agents.append(schemas.AgentInfo())
-    # ag_spec.agents.append(schemas.AgentInfo())
-    # print(ag_spec.to_json())

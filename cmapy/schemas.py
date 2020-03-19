@@ -1,3 +1,6 @@
+"""
+This module implements the cloneMAP schemas with json marshalling/unmarshalling
+"""
 import json
 from datetime import datetime
 

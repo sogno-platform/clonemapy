@@ -1,3 +1,7 @@
+"""
+This module implements the base class Agent which is to be used for the agent behavior implementation
+"""
+
 from datetime import datetime
 import cmapy.schemas as schemas
 import cmapy.df as df
@@ -5,7 +9,36 @@ import cmapy.iot as iot
 
 class Agent():
     """
-    super class of agents
+    Super class of agents
+
+    Agent provides functins for messaging, logging, MQTT and interaction with the DF
+
+    Attributes
+    ----------
+    id : integer
+         unique ID of agent
+    nodeid : integer
+             ID of node agent is connected to
+    name : string
+           name of agent
+    type : string
+           type of agent
+    subtype : string
+              subtype of agent
+    custom : string
+             custom agent configuration
+    masid : integer
+            ID of MAS agent is located in
+    registered_svcs : dictionary of schemas.Service
+                      all services that have been registered with DF by agent
+    msg_in : multiprocessing.Queue
+             queue for incoming messages of agent
+    msg_out : multiprocessing.Queue
+              queue of outgoing messages of agent
+    log_out : multiprocessing.Queue
+              queue for log messages of agent
+    mqtt_client : paho.mqtt.client.Client
+                  mqtt client
     """
     def __init__(self, info, msg_in, msg_out, log_out):
         super().__init__()
@@ -65,6 +98,9 @@ class Agent():
         print("put msg")
 
     def new_log(self, logtype, msg, data):
+        """
+        stores one log messages
+        """
         log = schemas.LogMessage()
         log.masid = self.masid
         log.agentid = self.id
@@ -75,6 +111,9 @@ class Agent():
         print("put log")
 
     def register_service(self, svc):
+        """
+        registers one service with the DF if service has not been registered before; returns svc ID
+        """
         if svc.desc == "":
             return
         temp = self.registered_svcs.get(svc.desc, None)
@@ -90,6 +129,9 @@ class Agent():
         return svc.id
 
     def search_for_service(self, desc):
+        """
+        searches for a service and returns all matching services within MAS
+        """
         temp = df.get_svc(self.masid, desc)
         svcs = []
         for i in temp:
@@ -98,6 +140,9 @@ class Agent():
         return svcs
 
     def search_for_local_service(self, desc, dist):
+        """
+        searches for a service and returns all matching services within specified distance
+        """
         temp = df.get_local_svc(self.masid, desc, self.nodeid, dist)
         svcs = []
         for i in temp:
@@ -106,6 +151,9 @@ class Agent():
         return svcs
 
     def deregister_service(self, svcid):
+        """
+        deregisters the service with svcid
+        """
         desc = ""
         for temp in self.registered_svcs:
             if self.registered_svcs[temp].id == svcid:
@@ -117,11 +165,20 @@ class Agent():
         df.delete_svc(self.masid, svcid)
 
     def mqtt_subscribe(self, topic):
+        """
+        subscribe to a mqtt topic
+        """
         self.mqtt_client.subscribe(topic)
 
     def mqtt_publish(self, topic, payload=None, qos=0, retain=False):
+        """
+        publishes a mqtt message to a topic
+        """
         self.mqtt_client.publish(topic, payload, qos, retain)
 
     def mqtt_recv_msg(self):
+        """
+        reads one message from incoming message queue; blocks if empty
+        """
         msg = self.mqtt_client.msg_in_queue.get()
         return msg

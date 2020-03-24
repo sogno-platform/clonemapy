@@ -95,7 +95,6 @@ class Agent():
         """
         msg.sender = self.id
         self.msg_out.put(msg)
-        print("put msg")
 
     def new_log(self, logtype, msg, data):
         """
@@ -108,7 +107,6 @@ class Agent():
         log.message = msg
         log.add_data = data
         self.log_out.put(log)
-        print("put log")
 
     def register_service(self, svc):
         """

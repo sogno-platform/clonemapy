@@ -19,6 +19,7 @@ import time
 import json
 import requests
 import queue
+import logging
 import cmapy.schemas as schemas
 import cmapy.ams as ams
 import cmapy.agent as agent
@@ -44,8 +45,6 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             pass
         else:
             pass
-        print(self.path)
-        print(self.server.agency.hostname)
         self.send_response(200)
 
     def handle_get_agency(self):
@@ -85,7 +84,6 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         content_len = int(self.headers.get('Content-Length'))
         body = self.rfile.read(content_len)
-        print(str(body, 'utf-8'))
         msg_dicts = json.loads(str(body, 'utf-8'))
         msgs = []
         for i in msg_dicts:
@@ -182,15 +180,17 @@ class Agency:
         try:
             log_type = os.environ['CLONEMAP_LOG_LEVEL']
             if log_type == "info":
-                pass
-            elif log_type == "error":
-                pass
+                logging.basicConfig(format='%(asctime)s - [%(levelname)s] - %(message)s',
+                    level=logging.INFO)
             else:
-                pass
+                logging.basicConfig(format='%(asctime)s - [%(levelname)s] - %(message)s',
+                    level=logging.ERROR)
         except KeyError:
-            pass 
+            logging.basicConfig(format='%(asctime)s - [%(levelname)s] - %(message)s',
+                level=logging.ERROR)
 
         temp = socket.gethostname()
+        logging.info("Starting agency " + temp)
         hostname = temp.split("-")
         self.hostname = hostname
         if len(hostname) < 4:
@@ -213,6 +213,7 @@ class Agency:
         """
         conf = ams.get_agency_config(self.info.spec.masid, self.info.spec.id)
         self.info.spec.logger = conf.spec.logger
+        logging.info("Starting agents")
         for i in conf.agents:
             self.create_agent(i)
     
@@ -227,6 +228,7 @@ class Agency:
         self.lock.acquire()
         self.local_agents[agentinfo.spec.id] = ag_handler
         self.lock.release()
+        logging.info("Started agent "+str(agentinfo.spec.id))
 
     def listen(self):
         """
@@ -244,7 +246,6 @@ class Agency:
         while True:
             msg = self.msg_out.get()
             recv = msg.receiver
-            print(recv)
             self.lock.acquire()
             local_agent = self.local_agents.get(recv, None)
             recv_agency = self.remote_agents.get(recv, None)
@@ -252,7 +253,6 @@ class Agency:
             if local_agent != None:
                 # agent is local -> add message to its queue
                 local_agent.msg_in.put(msg)
-                print("Put msg to local agent")
                 continue
             elif recv_agency == None:
                 # agent is non-local, but address of agent is unknown -> request agent address
@@ -280,12 +280,6 @@ class Agency:
                 recv_agency = agency
             # add message to queue of remote agent
             recv_agency.put(msg)
-            print("Put msg to remote agent")
-            # msg_dict = msg.to_json_dict()
-            # msg_dicts = []
-            # msg_dicts.append(msg_dict)
-            # js = json.dumps(msg_dicts)
-            # resp = requests.post("http://"+recv_agency+":10000/api/agency/msgs", data=js)
 
 def remote_agency_sender(address, out):
     """
@@ -297,10 +291,7 @@ def remote_agency_sender(address, out):
         msg_dicts = []
         msg_dicts.append(msg_dict)
         js = json.dumps(msg_dicts)
-        print(address)
-        print(js)
-        resp = requests.post("http://"+address+":10000/api/agency/msgs", data=js)
-        print("sent msg")
+        requests.post("http://"+address+":10000/api/agency/msgs", data=js)
 
 if __name__ == "__main__":
     ag = Agency(agent.Agent)

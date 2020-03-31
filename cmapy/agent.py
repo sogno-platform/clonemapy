@@ -42,13 +42,13 @@ class Agent():
     """
     def __init__(self, info, msg_in, msg_out, log_out):
         super().__init__()
-        self.id = info.spec.id
+        self.id = info.id
         self.nodeid = info.spec.nodeid
         self.name = info.spec.name
         self.type = info.spec.type
         self.subtype = info.spec.subtype
         self.custom = info.spec.custom
-        self.masid = info.spec.masid
+        self.masid = info.masid
         self.registered_svcs = {}
         self.msg_in = msg_in
         self.msg_out = msg_out

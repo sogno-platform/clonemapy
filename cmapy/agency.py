@@ -195,13 +195,14 @@ class Agency:
         self.hostname = hostname
         if len(hostname) < 4:
             pass
-        self.info.spec.masid = int(hostname[1])
-        self.info.spec.id = int(hostname[3])
-        self.info.spec.name = temp + ".mas" + hostname[1] + "agencies"
+        self.info.masid = int(hostname[1])
+        self.info.imagegroupid = int(hostname[3])
+        self.info.id = int(hostname[5])
+        self.info.name = temp + ".mas" + hostname[1] + "agencies"
 
         x = threading.Thread(target=self.listen)
         x.start()
-        y = threading.Thread(target=logger.send_logs, args=(self.info.spec.masid, self.log_out,))
+        y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,))
         y.start()
         self.start_agents()
         time.sleep(5)
@@ -211,8 +212,9 @@ class Agency:
         """
         Requests the agent configuration from the ams and starts the agents
         """
-        conf = ams.get_agency_config(self.info.spec.masid, self.info.spec.id)
-        self.info.spec.logger = conf.spec.logger
+        conf = ams.get_container_agency_info_full(self.info.masid, self.info.imagegroupid, self.info.id)
+        self.info.id = conf.id
+        self.info.logger = conf.logger
         logging.info("Starting agents")
         for i in conf.agents:
             self.create_agent(i)
@@ -226,9 +228,9 @@ class Agency:
         p.start()
         ag_handler.proc = p
         self.lock.acquire()
-        self.local_agents[agentinfo.spec.id] = ag_handler
+        self.local_agents[agentinfo.id] = ag_handler
         self.lock.release()
-        logging.info("Started agent "+str(agentinfo.spec.id))
+        logging.info("Started agent "+str(agentinfo.id))
 
     def listen(self):
         """
@@ -257,7 +259,7 @@ class Agency:
             elif recv_agency == None:
                 # agent is non-local, but address of agent is unknown -> request agent address
                 self.lock.acquire()
-                masid = self.info.spec.masid
+                masid = self.info.masid
                 self.lock.release()
                 addr = ams.get_agent_address(masid, recv)
                 self.lock.acquire()

@@ -54,7 +54,7 @@ class Agent():
         self.msg_out = msg_out
         self.log_out = log_out
         self.mqtt_client = iot.mqtt_connect()
-        self.task()
+        # self.task()
 
     def task(self):
         """

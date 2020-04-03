@@ -76,8 +76,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         handler function for GET requests
         """
+        ret = ""
         if self.path == "/api/agency":
-            self.handle_get_agency()
+            ret = self.handle_get_agency()
         elif self.path == "/api/agency/agents":
             pass
         elif self.path == "/api/agency/msgs":
@@ -89,12 +90,21 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         else:
             pass
         self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(ret)
 
     def handle_get_agency(self):
         """
         handler function for GET request to /api/agency
         """
-        pass
+        content_len = int(self.headers.get('Content-Length'))
+        self.rfile.read(content_len)
+        self.server.agency.lock.acquire()
+        info = self.server.agency.info
+        self.server.agency.lock.release()
+        ret = info.to_json()
+        return ret
     
     def do_POST(self):
         """

@@ -98,8 +98,6 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         handler function for GET request to /api/agency
         """
-        content_len = int(self.headers.get('Content-Length'))
-        self.rfile.read(content_len)
         self.server.agency.lock.acquire()
         info = self.server.agency.info
         self.server.agency.lock.release()

@@ -119,8 +119,12 @@ class AgencyInfoFull():
 
     def to_json_dict(self):
         js_dict = {"masid": self.masid, "name": self.name, "id": self.id,
-            "imid": self.imagegroupid, "log": self.logger.to_json_dict(), "agents": self.agents,
+            "imid": self.imagegroupid, "log": self.logger.to_json_dict(),
             "status": self.status.to_json_dict()}
+        ag_dicts = []
+        for i in self.agents:
+            ag_dicts.append(i.to_json_dict())
+        js_dict["agents"] = ag_dicts
         return js_dict
 
     def to_json(self):
@@ -134,8 +138,13 @@ class AgencyInfoFull():
         self.id = js_dict.get("id", 0)
         self.imagegroupid = js_dict.get("imid", 0)
         self.logger.from_json_dict(js_dict.get("log", LogConfig()))
-        self.agents = js_dict.get("agents", [])
         self.status = js_dict.get("status", Status())
+        ag_dicts = js_dict.get("agents", [])
+        for i in ag_dicts:
+            ag = AgentInfo()
+            ag.from_json_dict(i)
+            self.agents.append(ag)
+
 
     def from_json(self, js):
         js_dict = json.loads(js)

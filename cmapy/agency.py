@@ -66,6 +66,7 @@ import cmapy.schemas as schemas
 import cmapy.ams as ams
 import cmapy.agent as agent
 import cmapy.logger as logger
+import cmapy.benchmark as benchmark
 
 class AgencyHandler(server.BaseHTTPRequestHandler):
     """
@@ -338,4 +339,4 @@ def remote_agency_sender(address, out):
         requests.post("http://"+address+":10000/api/agency/msgs", data=js)
 
 if __name__ == "__main__":
-    ag = Agency(agent.Agent)
+    ag = Agency(benchmark.Agent)

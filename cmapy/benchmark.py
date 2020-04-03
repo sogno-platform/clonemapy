@@ -75,7 +75,8 @@ class CustomData():
 
 class Agent(agent.Agent):
     def __init__(self, info, msg_in, msg_out, log_out):
-        super().__init__()
+        super().__init__(info, msg_in, msg_out, log_out)
+        self.pingpong()
 
     def pingpong(self):
         cust = CustomData()

@@ -63,7 +63,11 @@ class LogConfig():
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -91,7 +95,11 @@ class Status():
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -129,7 +137,11 @@ class AgencyInfoFull():
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -172,7 +184,11 @@ class AgencyInfo():
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -208,7 +224,11 @@ class AgentSpec():
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -236,7 +256,11 @@ class Address():
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -268,7 +292,11 @@ class AgentInfo():
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -329,7 +357,11 @@ class ACLMessage:
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -376,7 +408,11 @@ class LogMessage:
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -409,7 +445,11 @@ class State:
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):
@@ -445,7 +485,11 @@ class Service:
 
     def to_json(self):
         js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
+        js_res = ""
+        try:
+            js_res = json.dumps(js_dict)
+        except TypeError:
+            pass
         return js_res
 
     def from_json_dict(self, js_dict):

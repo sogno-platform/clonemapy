@@ -90,7 +90,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         else:
             pass
         self.send_response(200)
-        self.send_header("Content-type", "text/html")
+        self.send_header("Content-type", "application/json")
         self.end_headers()
         self.wfile.write(ret.encode())
 
@@ -344,7 +344,9 @@ def remote_agency_sender(address, out):
         msg_dicts = []
         msg_dicts.append(msg_dict)
         js = json.dumps(msg_dicts)
-        requests.post("http://"+address+":10000/api/agency/msgs", data=js)
+        resp = requests.post("http://"+address+":10000/api/agency/msgs", data=js)
+        if resp.status_code != 201:
+            pass
 
 if __name__ == "__main__":
     ag = Agency(benchmark.Agent)

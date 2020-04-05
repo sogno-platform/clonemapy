@@ -58,20 +58,26 @@ def post_logs(masid, logs):
         log_dict = i.to_json_dict()
         log_dicts.append(log_dict)
     js = json.dumps(log_dicts)
-    requests.post(Host+"/api/logging/"+str(masid)+"/list", data=js)
+    resp = requests.post(Host+"/api/logging/"+str(masid)+"/list", data=js)
+    if resp.status_code != 201:
+        pass
 
 def put_state(masid, agentid, state):
     """
     update state of agent
     """
     js = state.to_json()
-    requests.post(Host+"/api/state/"+str(masid)+"/"+str(agentid), data=js)
+    resp = requests.post(Host+"/api/state/"+str(masid)+"/"+str(agentid), data=js)
+    if resp.status_code != 201:
+        pass
 
 def get_state(masid, agentid):
     """
     request state of agent
     """
     resp = requests.get(Host+"/api/state/"+str(masid)+"/"+str(agentid))
+    if resp.status_code != 200:
+        pass
     state = schemas.State()
     state.from_json(resp.text)
     return state

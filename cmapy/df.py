@@ -55,6 +55,8 @@ def post_svc(masid, svc):
     """
     js = svc.to_json()
     resp = requests.post(Host+"/api/df/"+str(masid)+"/svc", data=js)
+    if resp.status_code != 201:
+        pass
     svc.from_json(resp.text)
     return svc
 
@@ -63,6 +65,8 @@ def get_svc(masid, desc):
     request services with matching description
     """
     resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc)
+    if resp.status_code != 200:
+        pass
     svc_dicts = json.loads(resp.text)
     svcs = []
     if svc_dicts == None:
@@ -78,6 +82,8 @@ def get_local_svc(masid, desc, nodeid, dist):
     request local services with matching description
     """
     resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/"+str(dist))
+    if resp.status_code != 200:
+        pass
     svc_dicts = json.loads(resp.text)
     svcs = []
     if svc_dicts == None:
@@ -93,3 +99,5 @@ def delete_svc(masid, svcid):
     delete service with svcid
     """
     resp = requests.delete(Host+"/api/df/"+str(masid)+"/svc/id/"+svcid)
+    if resp.status_code != 200:
+        pass

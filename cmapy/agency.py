@@ -76,23 +76,34 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         handler function for GET requests
         """
+        path = self.path.split("/")
         ret = ""
-        if self.path == "/api/agency":
-            ret = self.handle_get_agency()
-        elif self.path == "/api/agency/agents":
-            pass
-        elif self.path == "/api/agency/msgs":
-            pass
-        elif self.path == "/api/agency/msgundeliv":
-            pass
-        elif self.path == "/api/agency/agents":
-            pass
+        resvalid = False
+
+        if len(path) == 3:
+            if path[2] == "agency":
+                ret = self.handle_get_agency()
+                resvalid = True
+        elif len(path) == 6:
+            if path[2] == "agency" and path[3] == "agents" and path[5] == "status":
+                try:
+                    agentid = int(path[4])
+                    ret = self.handle_get_agent_status(agentid)
+                    resvalid = True
+                except ValueError:
+                    pass
+
+        if resvalid:
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(ret.encode())
         else:
-            pass
-        self.send_response(200)
-        self.send_header("Content-type", "application/json")
-        self.end_headers()
-        self.wfile.write(ret.encode())
+            ret = "Method Not Allowed"
+            self.send_response(405)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(ret.encode())
 
     def handle_get_agency(self):
         """
@@ -103,25 +114,45 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         self.server.agency.lock.release()
         ret = info.to_json()
         return ret
+
+    def handle_get_agent_status(self, agentid):
+        """
+        handler function for GET request to /api/agency/agents/{agent-id}/status
+        """
+        stat = schemas.Status()
+        return stat.to_json()
     
     def do_POST(self):
         """
         handler function for POST requests
         """
-        if self.path == "/api/agency":
-            pass
-        elif self.path == "/api/agency/agents":
-            self.handle_post_agent()
-        elif self.path == "/api/agency/msgs":
-            self.handle_post_msgs()
+        path = self.path.split("/")
+        ret = ""
+        resvalid = False
+        
+        if len(path) == 4:
+            if path[2] == "agency" and path[3] == "agents":
+                self.handle_post_agent()
+                resvalid = True
+            elif path[2] == "agency" and path[3] == "msgs":
+                self.handle_post_msgs()
+                resvalid = True
+            elif path[2] == "agency" and path[3] == "msgundeliv":
+                self.handle_post_uneliv_msg()
+                resvalid = True
+
+        if resvalid:
+            ret = "Ressource Created"
             self.send_response(201)
+            self.send_header("Content-type", "text/plain")
             self.end_headers()
-        elif self.path == "/api/agency/msgundeliv":
-            self.handle_post_uneliv_msg()
-        elif self.path == "/api/agency/agents":
-            pass
+            self.wfile.write(ret.encode())
         else:
-            pass
+            ret = "Method Not Allowed"
+            self.send_response(405)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(ret.encode())
 
     def handle_post_agent(self):
         """
@@ -158,20 +189,33 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         handler function for DELETE requests
         """
-        if self.path == "/api/agency":
-            pass
-        elif self.path == "/api/agency/agents":
-            pass
-        elif self.path == "/api/agency/msgs":
-            pass
-        elif self.path == "/api/agency/msgundeliv":
-            pass
-        elif self.path == "/api/agency/agents":
-            pass
+        path = self.path.split("/")
+        ret = ""
+        resvalid = False
+        
+        if len(path) == 5:
+            if path[2] == "agency" and path[3] == "agents":
+                try:
+                    agentid = str(path[4])
+                    self.handle_delete_agent(agentid)
+                    resvalid = True
+                except ValueError:
+                    pass
+        
+        if resvalid:
+            ret = "Ressource deleted"
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(ret.encode())
         else:
-            pass
+            ret = "Method Not Allowed"
+            self.send_response(405)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(ret.encode())
 
-    def handle_delete_agent(self):
+    def handle_delete_agent(self, agentid):
         """
         handler function for delete request to /api/agency/agents/{agent-id}
         """

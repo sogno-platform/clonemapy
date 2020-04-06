@@ -45,6 +45,7 @@ This module implements necessary client methods for the cloneMAP logger
 """
 import requests
 import json
+import logging
 import cmapy.schemas as schemas
 
 Host = "http://logger:11000"
@@ -60,7 +61,7 @@ def post_logs(masid, logs):
     js = json.dumps(log_dicts)
     resp = requests.post(Host+"/api/logging/"+str(masid)+"/list", data=js)
     if resp.status_code != 201:
-        pass
+        logging.error("Logger error")
 
 def put_state(masid, agentid, state):
     """
@@ -69,17 +70,16 @@ def put_state(masid, agentid, state):
     js = state.to_json()
     resp = requests.post(Host+"/api/state/"+str(masid)+"/"+str(agentid), data=js)
     if resp.status_code != 201:
-        pass
+        logging.error("Logger error")
 
 def get_state(masid, agentid):
     """
     request state of agent
     """
-    resp = requests.get(Host+"/api/state/"+str(masid)+"/"+str(agentid))
-    if resp.status_code != 200:
-        pass
     state = schemas.State()
-    state.from_json(resp.text)
+    resp = requests.get(Host+"/api/state/"+str(masid)+"/"+str(agentid))
+    if resp.status_code == 200:
+        state.from_json(resp.text)
     return state
 
 def send_logs(masid, log_queue):

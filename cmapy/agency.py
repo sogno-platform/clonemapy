@@ -308,11 +308,14 @@ class Agency:
         Requests the agent configuration from the ams and starts the agents
         """
         conf = ams.get_container_agency_info_full(self.info.masid, self.info.imagegroupid, self.info.id)
-        self.info.id = conf.id
-        self.info.logger = conf.logger
-        logging.info("Starting agents")
-        for i in conf.agents:
-            self.create_agent(i)
+        if conf.name != "":
+            self.info.id = conf.id
+            self.info.logger = conf.logger
+            logging.info("Starting agents")
+            for i in conf.agents:
+                self.create_agent(i)
+        else:
+            logging.error("Received invalid agency info from AMS")
     
     def create_agent(self, agentinfo):
         """
@@ -357,6 +360,9 @@ class Agency:
                 masid = self.info.masid
                 self.lock.release()
                 addr = ams.get_agent_address(masid, recv)
+                if addr.agency == "":
+                    logging.error("Invalif agent address")
+                    continue
                 self.lock.acquire()
                 # check if agency of remote agent is known
                 agency = self.remote_agencies.get(addr.agency, None)

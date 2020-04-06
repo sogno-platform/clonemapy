@@ -52,31 +52,28 @@ def get_agency_info_full(masid, agencyid):
     """
     get configuration of agency
     """
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agencies/"+str(agencyid))
-    if resp.status_code != 200:
-        pass
     info = schemas.AgencyInfoFull()
-    info.from_json(resp.text)
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agencies/"+str(agencyid))
+    if resp.status_code == 200:
+        info.from_json(resp.text)
     return info
 
 def get_container_agency_info_full(masid, imid, agencyid):
     """
     get configuration of agency
     """
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/container/"+str(imid)+"/"+str(agencyid))
-    if resp.status_code != 200:
-        pass
     info = schemas.AgencyInfoFull()
-    info.from_json(resp.text)
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/container/"+str(imid)+"/"+str(agencyid))
+    if resp.status_code == 200:
+        info.from_json(resp.text)
     return info
 
 def get_agent_address(masid, agentid):
     """
     get address of agent
     """
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)+"/address")
-    if resp.status_code != 200:
-        pass
     addr = schemas.Address()
-    addr.from_json(resp.text)
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)+"/address")
+    if resp.status_code == 200:
+        addr.from_json(resp.text)
     return addr

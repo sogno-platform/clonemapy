@@ -45,6 +45,7 @@ This module implements necessary client methods for the cloneMAP DF
 """
 import requests
 import json
+import logging
 import cmapy.schemas as schemas
 
 Host = "http://df:12000"
@@ -55,43 +56,46 @@ def post_svc(masid, svc):
     """
     js = svc.to_json()
     resp = requests.post(Host+"/api/df/"+str(masid)+"/svc", data=js)
-    if resp.status_code != 201:
-        pass
-    svc.from_json(resp.text)
+    if resp.status_code == 201:
+        svc.from_json(resp.text)
+    else:
+        logging.error("DF error")
     return svc
 
 def get_svc(masid, desc):
     """
     request services with matching description
     """
-    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc)
-    if resp.status_code != 200:
-        pass
-    svc_dicts = json.loads(resp.text)
     svcs = []
-    if svc_dicts == None:
-        return svcs
-    for i in svc_dicts:
-        svc = schemas.Service()
-        svc.from_json_dict(i)
-        svcs.append(svc)
+    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc)
+    if resp.status_code == 200:
+        svc_dicts = json.loads(resp.text)
+        if svc_dicts == None:
+            return svcs
+        for i in svc_dicts:
+            svc = schemas.Service()
+            svc.from_json_dict(i)
+            svcs.append(svc)
+    else:
+        logging.error("DF error")
     return svcs
 
 def get_local_svc(masid, desc, nodeid, dist):
     """
     request local services with matching description
     """
-    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/"+str(dist))
-    if resp.status_code != 200:
-        pass
-    svc_dicts = json.loads(resp.text)
     svcs = []
-    if svc_dicts == None:
-        return svcs
-    for i in svc_dicts:
-        svc = schemas.Service()
-        svc.from_json_dict(i)
-        svcs.append(svc)
+    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/"+str(dist))
+    if resp.status_code == 200:
+        svc_dicts = json.loads(resp.text)
+        if svc_dicts == None:
+            return svcs
+        for i in svc_dicts:
+            svc = schemas.Service()
+            svc.from_json_dict(i)
+            svcs.append(svc)
+    else:
+        logging.error("DF error")
     return svcs
 
 def delete_svc(masid, svcid):
@@ -100,4 +104,4 @@ def delete_svc(masid, svcid):
     """
     resp = requests.delete(Host+"/api/df/"+str(masid)+"/svc/id/"+svcid)
     if resp.status_code != 200:
-        pass
+        logging.error("DF error")

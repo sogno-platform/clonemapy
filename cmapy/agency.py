@@ -72,9 +72,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
     """
     Handles http requests to the agency
     """
-    def log_message(self):
-        pass
-    
+    def log_message(self, format, *args):
+        return
+
     def do_GET(self):
         """
         handler function for GET requests
@@ -82,6 +82,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
+        self.log_message()
 
         if len(path) == 3:
             if path[2] == "agency":

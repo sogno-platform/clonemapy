@@ -72,6 +72,9 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
     """
     Handles http requests to the agency
     """
+    def log_message(self):
+        pass
+    
     def do_GET(self):
         """
         handler function for GET requests

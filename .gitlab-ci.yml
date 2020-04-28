@@ -5,11 +5,11 @@ stages:
 benchmarkbuild:
   stage: build
   script:
-    - docker build -f docker/Dockerfile -t cmapybenchmark .
+    - docker build -f docker/Dockerfile -t test .
 
 benchmarkdeploy:
   stage: deploy
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.git.rwth-aachen.de
-    - docker tag cmapybenchmark registry.git.rwth-aachen.de/acs/public/cloud/mas/cmapy/benchmark
-    - docker push registry.git.rwth-aachen.de/acs/public/cloud/mas/cmapy/benchmark
+    - docker tag test registry.git.rwth-aachen.de/acs/public/cloud/mas/cmapy/test
+    - docker push registry.git.rwth-aachen.de/acs/public/cloud/mas/cmapy/test

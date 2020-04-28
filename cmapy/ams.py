@@ -48,12 +48,12 @@ import cmapy.schemas as schemas
 
 Host = "http://ams:9000"
 
-def get_agency_info_full(masid, agencyid):
+def get_agency_info_full(masid, imid, agencyid):
     """
     get configuration of agency
     """
     info = schemas.AgencyInfoFull()
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agencies/"+str(agencyid))
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid)+"/agency/"+str(agencyid))
     if resp.status_code == 200:
         info.from_json(resp.text)
     return info

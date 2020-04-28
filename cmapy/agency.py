@@ -311,7 +311,7 @@ class Agency:
         """
         Requests the agent configuration from the ams and starts the agents
         """
-        conf = ams.get_container_agency_info_full(self.info.masid, self.info.imagegroupid, self.info.id)
+        conf = ams.get_agency_info_full(self.info.masid, self.info.imagegroupid, self.info.id)
         if conf.name != "":
             self.info.id = conf.id
             self.info.logger = conf.logger

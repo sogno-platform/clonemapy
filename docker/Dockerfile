@@ -46,4 +46,4 @@ WORKDIR /agency
 COPY cmapy cmapy
 RUN pip install -r cmapy/requirements.txt
 ENV PYTHONPATH=.
-CMD ["python", "-u", "cmapy/agency.py"]
+CMD ["python", "-u", "cmapy/agenttest.py"]

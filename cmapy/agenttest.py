@@ -84,11 +84,11 @@ class Agent(agent.Agent):
         msg = self.recv_msg()
         self.new_log("app", msg.content, "")
         self.mqtt_subscribe("testtopic")
-        self.mqtt_publish("testtopic", "testpayload"+str(self.id))
+        self.mqtt_publish("testtopic", payload="testpayload"+str(self.id))
         msg = self.mqtt_recv_msg()
-        self.new_log("app", msg.payload, "")
+        self.new_log("app", str(msg.payload, 'utf-8'), "")
         msg = self.mqtt_recv_msg()
-        self.new_log("app", msg.payload, "")
+        self.new_log("app", str(msg.payload, 'utf-8'), "")
 
 if __name__ == "__main__":
     ag = agency.Agency(Agent)

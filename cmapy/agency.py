@@ -82,7 +82,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
-        self.log_message()
+        # self.log_message()
 
         if len(path) == 3:
             if path[2] == "agency":

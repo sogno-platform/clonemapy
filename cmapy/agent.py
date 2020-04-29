@@ -248,6 +248,23 @@ class Agent():
         reads one message from incoming message queue; blocks if empty
         """
         if not self.mqtt_on:
-            return -1
+            return None
         msg = self.mqtt_client.msg_in_queue.get()
+        return msg
+
+    def mqtt_recv_latest_msg(self):
+        """
+        reads the latest message from incoming queue and discards all older messages; blocks is queue is empty
+        """
+        if not self.mqtt_on:
+            return None
+        num_msg = self.mqtt_client.msg_in_queue.qsize()
+        if num_msg == 0:
+            # queue is empty wait for next message
+            msg = self.mqtt_client.msg_in_queue.get()
+        else:
+            # discard num-msg-1 messages and return latest message
+            for i in range(num_msg-1):
+                msg = self.mqtt_client.msg_in_queue.get()
+            msg = self.mqtt_client.msg_in_queue.get()
         return msg

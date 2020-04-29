@@ -365,7 +365,7 @@ class Agency:
                 self.lock.release()
                 addr = ams.get_agent_address(masid, recv)
                 if addr.agency == "":
-                    logging.error("Invalif agent address")
+                    logging.error("Invalid agent address")
                     continue
                 self.lock.acquire()
                 # check if agency of remote agent is known

@@ -223,7 +223,14 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         handler function for delete request to /api/agency/agents/{agent-id}
         """
-        pass
+        self.server.agency.lock.acquire()
+        handler = self.server.agency.local_agents.get(agentid, None)
+        if handler == None:
+            pass
+        else:
+            handler.proc.terminate()
+            del self.server.agency.local_agents[agentid]
+        self.server.agency.lock.release()
 
 class AgentHandler:
     """

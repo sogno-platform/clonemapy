@@ -48,7 +48,7 @@ import cmapy.schemas as schemas
 
 Host = "http://ams:9000"
 
-def get_agency_info_full(masid, imid, agencyid):
+def get_agency_info_full(masid: int, imid: int, agencyid: int) -> schemas.AgencyInfoFull:
     """
     get configuration of agency
     """
@@ -58,7 +58,7 @@ def get_agency_info_full(masid, imid, agencyid):
         info.from_json(resp.text)
     return info
 
-def get_container_agency_info_full(masid, imid, agencyid):
+def get_container_agency_info_full(masid: int, imid: int, agencyid: int) -> schemas.AgencyInfoFull:
     """
     get configuration of agency
     """
@@ -68,7 +68,7 @@ def get_container_agency_info_full(masid, imid, agencyid):
         info.from_json(resp.text)
     return info
 
-def get_agent_address(masid, agentid):
+def get_agent_address(masid: int, agentid: int) -> schemas.Address:
     """
     get address of agent
     """

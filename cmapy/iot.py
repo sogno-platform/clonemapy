@@ -46,16 +46,16 @@ This module wraps around paho.mqtt.client
 import paho.mqtt.client as mqtt
 import queue
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client: mqtt.Client, userdata, flags, rc):
     pass
 
-def on_message(client, userdata, msg):
+def on_message(client: mqtt.Client, userdata, msg):
     """
     add received mqtt message to message queue
     """
     client.msg_in_queue.put(msg)
 
-def mqtt_connect():
+def mqtt_connect() -> mqtt.Client:
     """
     connect to broker, start listening for messages and return client
     """
@@ -67,7 +67,7 @@ def mqtt_connect():
     client.loop_start()
     return client
 
-def mqtt_disconnect(client):
+def mqtt_disconnect(client: mqtt.Client):
     """
     disconnect from broker
     """

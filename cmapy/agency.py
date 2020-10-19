@@ -119,7 +119,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         ret = info.to_json()
         return ret
 
-    def handle_get_agent_status(self, agentid):
+    def handle_get_agent_status(self, agentid: int):
         """
         handler function for GET request to /api/agency/agents/{agent-id}/status
         """
@@ -219,7 +219,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(ret.encode())
 
-    def handle_delete_agent(self, agentid):
+    def handle_delete_agent(self, agentid: int):
         """
         handler function for delete request to /api/agency/agents/{agent-id}
         """
@@ -273,7 +273,7 @@ class Agency:
                       stores the outgoing queue of remote agencies (sending to each remote agency is
                       handled in a seperate thread)
     """
-    def __init__(self, ag_class):
+    def __init__(self, ag_class: agent.Agent):
         super().__init__()
         self.info = schemas.AgencyInfo()
         self.ag_class = ag_class
@@ -328,7 +328,7 @@ class Agency:
         else:
             logging.error("Received invalid agency info from AMS")
     
-    def create_agent(self, agentinfo):
+    def create_agent(self, agentinfo: schemas.AgentInfo):
         """
         executes agent in seperate process
         """
@@ -395,7 +395,7 @@ class Agency:
             # add message to queue of remote agent
             recv_agency.put(msg)
 
-def remote_agency_sender(address, out):
+def remote_agency_sender(address: str, out: queue.Queue):
     """
     sender to remote agency; executed in seperate thread
     """

@@ -46,6 +46,8 @@ This module implements the base class Agent which is to be used for the agent be
 
 import os
 from datetime import datetime
+import paho.mqtt.client as mqtt
+import multiprocessing
 import cmapy.schemas as schemas
 import cmapy.df as df
 import cmapy.iot as iot
@@ -87,7 +89,7 @@ class Agent():
     mqtt_on: bool
              switch for mqtt
     """
-    def __init__(self, info, msg_in, msg_out, log_out):
+    def __init__(self, info: schemas.AgentInfo, msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
         super().__init__()
         self.id = info.id
         self.nodeid = info.spec.nodeid
@@ -96,21 +98,10 @@ class Agent():
         self.subtype = info.spec.subtype
         self.custom = info.spec.custom
         self.masid = info.masid
-        self.registered_svcs = {}
-        self.msg_in = msg_in
-        self.msg_out = msg_out
-        self.log_out = log_out
-        df_on = os.environ['CLONEMAP_DF']
-        if df_on == "ON":
-            self.df_on = True
-        else:
-            self.df_on = False
-        mqtt_on = os.environ['CLONEMAP_MQTT']
-        if mqtt_on == "ON":
-            self.mqtt_on = True
-            self.mqtt_client = iot.mqtt_connect()
-        else:
-            self.mqtt_on = False
+        self.acl = ACL(info.id, msg_in, msg_out)
+        self.logger = Logger(info.masid, info.id, log_out)
+        self.df = DF(info.masid, info.id, info.spec.nodeid)
+        self.mqtt = MQTT()
         # self.task()
 
     def task(self):
@@ -121,51 +112,123 @@ class Agent():
         msg = schemas.ACLMessage()
         msg.content = "Message from agent "+ str(self.id)
         msg.receiver = (self.id+1)%2
-        self.send_msg(msg)
-        msg = self.recv_msg()
+        self.acl.send_message(msg)
+        msg = self.acl.recv_message_wait()
         print(msg.content)
-        self.new_log("app", "Test log", "test data")
+        self.logger.new_log("app", "Test log", "test data")
         svc = schemas.Service()
         svc.desc = "testsvc"
-        id = self.register_service(svc)
+        id = self.df.register_service(svc)
         print(id)
-        temp = self.search_for_service("testsvc")
+        temp = self.df.search_for_service("testsvc")
         for i in temp:
             print(i.desc)
-        self.mqtt_subscribe("testtopic")
-        self.mqtt_publish("testtopic", "testpayload"+str(self.id))
-        msg = self.mqtt_recv_msg()
+        self.mqtt.subscribe("testtopic")
+        self.mqtt.publish("testtopic", "testpayload"+str(self.id))
+        msg = self.mqtt.recv_msg()
         print(msg.payload)
-        msg = self.mqtt_recv_msg()
+        msg = self.mqtt.recv_msg()
         print(msg.payload)
 
-    def recv_msg(self):
+class ACL():
+    def __init__(self, agent_id, msg_in, msg_out):
+        super().__init__()
+        self.id = agent_id
+        self.msg_in = msg_in
+        self.msg_out = msg_out
+
+    def recv_message_wait(self) -> schemas.ACLMessage:
         """
         reads one message from incoming message queue; blocks if empty
         """
         msg = self.msg_in.get()
         return msg
 
-    def send_msg(self, msg):
+    def recv_messages(self) -> list:
+        """
+        TODO
+        """
+        pass
+
+    def send_message(self, msg: schemas.ACLMessage):
         """
         sends message to receiver
         """
         msg.sender = self.id
         self.msg_out.put(msg)
 
-    def new_log(self, logtype, msg, data):
+    def new_behavior(self):
         """
-        stores one log messages
+        TODO
         """
-        log = schemas.LogMessage()
-        log.masid = self.masid
-        log.agentid = self.id
-        log.logtype = logtype
-        log.message = msg
-        log.add_data = data
-        self.log_out.put(log)
+        pass
 
-    def register_service(self, svc):
+class MQTT():
+    def __init__(self):
+        super().__init__()
+        mqtt_on = os.environ['CLONEMAP_MQTT']
+        if mqtt_on == "ON":
+            self.mqtt_on = True
+            self.mqtt_client = iot.mqtt_connect()
+        else:
+            self.mqtt_on = False
+
+    def subscribe(self, topic: str):
+        """
+        subscribe to a mqtt topic
+        """
+        if not self.mqtt_on:
+            return
+        self.mqtt_client.subscribe(topic)
+
+    def publish(self, topic: str, payload: str =None, qos: int =0, retain: bool =False):
+        """
+        publishes a mqtt message to a topic
+        """
+        if not self.mqtt_on:
+            return
+        self.mqtt_client.publish(topic, payload, qos, retain)
+
+    def recv_msg(self) -> mqtt.MQTTMessage:
+        """
+        reads one message from incoming message queue; blocks if empty
+        """
+        if not self.mqtt_on:
+            return None
+        msg = self.mqtt_client.msg_in_queue.get()
+        return msg
+
+    def recv_latest_msg(self) -> mqtt.MQTTMessage:
+        """
+        reads the latest message from incoming queue and discards all older messages; blocks is queue is empty
+        """
+        if not self.mqtt_on:
+            return None
+        num_msg = self.mqtt_client.msg_in_queue.qsize()
+        if num_msg == 0:
+            # queue is empty wait for next message
+            msg = self.mqtt_client.msg_in_queue.get()
+        else:
+            # discard num-msg-1 messages and return latest message
+            for i in range(num_msg-1):
+                msg = self.mqtt_client.msg_in_queue.get()
+            msg = self.mqtt_client.msg_in_queue.get()
+        return msg
+
+class DF():
+    def __init__(self, masid, agentid, nodeid):
+        super().__init__()
+        self.id = agentid
+        self.nodeid = nodeid
+        self.masid = masid
+        self.registered_svcs = {}
+        df_on = os.environ['CLONEMAP_DF']
+        if df_on == "ON":
+            self.df_on = True
+        else:
+            self.df_on = False
+
+    def register_service(self, svc: schemas.Service) -> int:
         """
         registers one service with the DF if service has not been registered before; returns svc ID
         """
@@ -185,7 +248,7 @@ class Agent():
         self.registered_svcs[svc.desc] = svc
         return svc.id
 
-    def search_for_service(self, desc):
+    def search_for_service(self, desc: str) -> list:
         """
         searches for a service and returns all matching services within MAS
         """
@@ -198,7 +261,7 @@ class Agent():
                 svcs.append(i)
         return svcs
 
-    def search_for_local_service(self, desc, dist):
+    def search_for_local_service(self, desc: str, dist: float) -> list:
         """
         searches for a service and returns all matching services within specified distance
         """
@@ -211,7 +274,7 @@ class Agent():
                 svcs.append(i)
         return svcs
 
-    def deregister_service(self, svcid):
+    def deregister_service(self, svcid: int):
         """
         deregisters the service with svcid
         """
@@ -227,44 +290,21 @@ class Agent():
         del self.registered_svcs[desc]
         df.delete_svc(self.masid, svcid)
 
-    def mqtt_subscribe(self, topic):
-        """
-        subscribe to a mqtt topic
-        """
-        if not self.mqtt_on:
-            return
-        self.mqtt_client.subscribe(topic)
+class Logger():
+    def __init__(self, masid: int, agentid: int, log_out):
+        super().__init__()
+        self.id = agentid
+        self.masid = masid
+        self.log_out = log_out
 
-    def mqtt_publish(self, topic, payload=None, qos=0, retain=False):
+    def new_log(self, logtype: str, msg: str, data: str):
         """
-        publishes a mqtt message to a topic
+        stores one log messages
         """
-        if not self.mqtt_on:
-            return
-        self.mqtt_client.publish(topic, payload, qos, retain)
-
-    def mqtt_recv_msg(self):
-        """
-        reads one message from incoming message queue; blocks if empty
-        """
-        if not self.mqtt_on:
-            return None
-        msg = self.mqtt_client.msg_in_queue.get()
-        return msg
-
-    def mqtt_recv_latest_msg(self):
-        """
-        reads the latest message from incoming queue and discards all older messages; blocks is queue is empty
-        """
-        if not self.mqtt_on:
-            return None
-        num_msg = self.mqtt_client.msg_in_queue.qsize()
-        if num_msg == 0:
-            # queue is empty wait for next message
-            msg = self.mqtt_client.msg_in_queue.get()
-        else:
-            # discard num-msg-1 messages and return latest message
-            for i in range(num_msg-1):
-                msg = self.mqtt_client.msg_in_queue.get()
-            msg = self.mqtt_client.msg_in_queue.get()
-        return msg
+        log = schemas.LogMessage()
+        log.masid = self.masid
+        log.agentid = self.id
+        log.logtype = logtype
+        log.message = msg
+        log.add_data = data
+        self.log_out.put(log)

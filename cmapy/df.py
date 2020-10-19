@@ -50,7 +50,7 @@ import cmapy.schemas as schemas
 
 Host = "http://df:12000"
 
-def post_svc(masid, svc):
+def post_svc(masid: int, svc: schemas.Service) -> schemas.Service:
     """
     post service to DF
     """
@@ -62,7 +62,7 @@ def post_svc(masid, svc):
         logging.error("DF error")
     return svc
 
-def get_svc(masid, desc):
+def get_svc(masid: int, desc: str) -> list:
     """
     request services with matching description
     """
@@ -80,7 +80,7 @@ def get_svc(masid, desc):
         logging.error("DF error")
     return svcs
 
-def get_local_svc(masid, desc, nodeid, dist):
+def get_local_svc(masid: int, desc: str, nodeid: int, dist: float) -> list:
     """
     request local services with matching description
     """
@@ -98,7 +98,7 @@ def get_local_svc(masid, desc, nodeid, dist):
         logging.error("DF error")
     return svcs
 
-def delete_svc(masid, svcid):
+def delete_svc(masid:int , svcid: int):
     """
     delete service with svcid
     """

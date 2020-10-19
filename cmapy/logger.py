@@ -48,10 +48,11 @@ import json
 import logging
 import cmapy.schemas as schemas
 import os
+import queue
 
 Host = "http://logger:11000"
 
-def post_logs(masid, logs):
+def post_logs(masid: int, logs: list):
     """
     post array of log messages to logger
     """
@@ -64,7 +65,7 @@ def post_logs(masid, logs):
     if resp.status_code != 201:
         logging.error("Logger error")
 
-def put_state(masid, agentid, state):
+def put_state(masid: int, agentid: int, state: schemas.State):
     """
     update state of agent
     """
@@ -73,7 +74,7 @@ def put_state(masid, agentid, state):
     if resp.status_code != 201:
         logging.error("Logger error")
 
-def get_state(masid, agentid):
+def get_state(masid: int, agentid: int) -> schemas.State:
     """
     request state of agent
     """
@@ -83,7 +84,7 @@ def get_state(masid, agentid):
         state.from_json(resp.text)
     return state
 
-def send_logs(masid, log_queue):
+def send_logs(masid: int, log_queue: queue.Queue):
     """
     wait for logs in the queue and send them to logger (to be executed in seperate thread)
     """

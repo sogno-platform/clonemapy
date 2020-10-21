@@ -48,9 +48,14 @@ import os
 from datetime import datetime
 import paho.mqtt.client as mqtt
 import multiprocessing
+import queue
+import threading
 import cmapy.schemas as schemas
 import cmapy.df as df
 import cmapy.iot as iot
+from typing import Callable, Dict
+# from collections.abc import Callable
+
 
 class Agent():
     """
@@ -130,40 +135,127 @@ class Agent():
         msg = self.mqtt.recv_msg()
         print(msg.payload)
 
+
+class Behavior():
+    """
+    abstract base class for agent behaviors
+    """
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def start(self):
+        """
+        starts the behavior
+        """
+        pass
+
+    def stop(self):
+        """
+        stops the behavior
+        """
+        pass
+
+    def _task(self):
+        """
+        behavior task
+        """
+        pass
+
+
 class ACL():
+    """
+    provides functionality for agent messaging
+
+    Attributes
+    ----------
+    _id : integer
+         unique ID of agent
+    _msg_in : multiprocessing.Queue
+             queue for incoming messages of agent
+    _msg_out : multiprocessing.Queue
+              queue of outgoing messages of agent
+    _msg_in_protocol : dict
+        dict mapping protocols to incoming queues which are checked by behaviors
+    """
     def __init__(self, agent_id, msg_in, msg_out):
         super().__init__()
-        self.id = agent_id
-        self.msg_in = msg_in
-        self.msg_out = msg_out
+        self._id = agent_id
+        self._msg_in = msg_in
+        self._msg_out = msg_out
+        self._msg_in_protocol = {}
+        self._lock = threading.Lock()
 
     def recv_message_wait(self) -> schemas.ACLMessage:
         """
         reads one message from incoming message queue; blocks if empty
         """
-        msg = self.msg_in.get()
+        msg = self._msg_in.get()
         return msg
 
     def recv_messages(self) -> list:
         """
-        TODO
+        reads all messages from incoming message queue, if any
         """
-        pass
+        msgs = []
+        while True:
+            try: 
+                msg = self._msg_in.get(block=False)
+                msgs.append(msg)
+            except queue.Empty:
+                break
+        return msgs
 
     def send_message(self, msg: schemas.ACLMessage):
         """
         sends message to receiver
         """
-        msg.sender = self.id
-        self.msg_out.put(msg)
+        msg.sender = self._id
+        self._msg_out.put(msg)
 
-    def new_behavior(self):
+    def _route_message(self, msg: schemas.ACLMessage):
         """
-        TODO
+        routes the message to the correct protocol queue or to the general queue if no behavior for the protocol is specified
         """
-        pass
+        self._lock.acquire()
+        q = self._msg_in_protocol.get(msg.protocol, None)
+        self._lock.release()
+        if q == None:
+            self._msg_in.put(msg)
+        else:
+            q.put(msg)
+
+    def new_behavior(self, protocol: int, handlePerformative: Dict[int, Callable[[schemas.ACLMessage], None]], handleDefault: Callable[[schemas.ACLMessage], None]) -> Behavior:
+        """
+        creates a new acl behavior
+        """
+        beh = ACLBehavior(self, protocol, handlePerformative, handleDefault)
+        return beh
+
+    def _register_behavior(self, protocol: int) -> queue.Queue:
+        q = queue.Queue(1000)
+        self._lock.acquire()
+        self._msg_in_protocol[protocol] = q
+        self._lock.release()
+        return q
+
+    def _de_register_behavior(self, protocol: int):
+        self._lock.acquire()
+        self._msg_in_protocol.pop(protocol, None)
+        self._lock.release()
+
 
 class MQTT():
+    """
+    provides functions for MQTT
+
+    Attributes
+    ----------
+    mqtt_client : paho.mqtt.client.Client
+                  mqtt client
+    mqtt_on: bool
+             switch for mqtt
+    """
     def __init__(self):
         super().__init__()
         mqtt_on = os.environ['CLONEMAP_MQTT']
@@ -215,7 +307,24 @@ class MQTT():
             msg = self.mqtt_client.msg_in_queue.get()
         return msg
 
+
 class DF():
+    """
+    provides functions for interaction with the DF
+
+    Attributes
+    ----------
+    id : integer
+         unique ID of agent
+    nodeid : integer
+             ID of node agent is connected to
+    masid : integer
+            ID of MAS agent is located in
+    registered_svcs : dictionary of schemas.Service
+                      all services that have been registered with DF by agent
+    df_on: bool
+           switch for df
+    """
     def __init__(self, masid, agentid, nodeid):
         super().__init__()
         self.id = agentid
@@ -290,7 +399,20 @@ class DF():
         del self.registered_svcs[desc]
         df.delete_svc(self.masid, svcid)
 
+
 class Logger():
+    """
+    provides functions for logging
+
+    Attributes
+    ----------
+    id : integer
+         unique ID of agent
+    masid : integer
+            ID of MAS agent is located in
+    log_out : multiprocessing.Queue
+              queue for log messages of agent
+    """
     def __init__(self, masid: int, agentid: int, log_out):
         super().__init__()
         self.id = agentid
@@ -308,3 +430,88 @@ class Logger():
         log.message = msg
         log.add_data = data
         self.log_out.put(log)
+
+
+class ACLBehavior(Behavior):
+    """
+    reactive behavior executed when ACL message is received
+    """
+    def __init__(self, acl: ACL, protocol: int, handlePerformative: Dict[int, Callable[[schemas.ACLMessage], None]], handleDefault: Callable[[schemas.ACLMessage], None]):
+        super().__init__
+        self.acl = acl
+        self.protocol = protocol
+        self.handlePerformative = handlePerformative
+        self.handleDefault = handleDefault
+
+    def start(self):
+        """
+        starts the behavior
+        """
+        pass
+
+    def stop(self):
+        """
+        stops the behavior
+        """
+        pass
+
+    def _task(self):
+        """
+        behavior task
+        """
+        pass
+
+
+class MQTTBehavior(Behavior):
+    """
+    reactive behavior executed when MQTT message is received
+    """
+    def __init__(self, mqtt: MQTT, topic: str, handle: Callable[[mqtt.MQTTMessage], None]):
+        super().__init__
+        self.mqtt = mqtt
+        self.topic = topic
+        self.handle = handle
+
+    def start(self):
+        """
+        starts the behavior
+        """
+        pass
+
+    def stop(self):
+        """
+        stops the behavior
+        """
+        pass
+
+    def _task(self):
+        """
+        behavior task
+        """
+        pass
+
+
+class PeriodicBehavior(Behavior):
+    """
+    reactive behavior executed periodically
+    """
+    def __init__(self):
+        super().__init__
+
+    def start(self):
+        """
+        starts the behavior
+        """
+        pass
+
+    def stop(self):
+        """
+        stops the behavior
+        """
+        pass
+
+    def _task(self):
+        """
+        behavior task
+        """
+        pass

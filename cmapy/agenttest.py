@@ -76,19 +76,19 @@ class Agent(agent.Agent):
         self.task()
 
     def task(self):
-        self.new_log("app", "This is agent "+ str(self.id), "")
-        self.mqtt_subscribe("testtopic"+str((self.id+1)%2))
+        self.logger.new_log("app", "This is agent "+ str(self.id), "")
+        self.mqtt.subscribe("testtopic"+str((self.id+1)%2))
         msg = schemas.ACLMessage()
         msg.content = "Message from agent "+ str(self.id)
         msg.receiver = (self.id+1)%2
-        self.send_msg(msg)
-        msg = self.recv_msg()
-        self.new_log("app", msg.content, "")
+        self.acl.send_message(msg)
+        msg = self.acl.recv_message_wait()
+        self.logger.new_log("app", msg.content, "")
         for i in range(5):
-            self.mqtt_publish("testtopic"+str(self.id), "mqtt_test"+str(i))
+            self.mqtt.publish("testtopic"+str(self.id), "mqtt_test"+str(i))
         time.sleep(5)
-        msg = self.mqtt_recv_latest_msg()
-        self.new_log("app", str(msg.payload, 'utf-8'), "")
+        msg = self.mqtt.recv_latest_msg()
+        self.logger.new_log("app", str(msg.payload, 'utf-8'), "")
 
 if __name__ == "__main__":
     ag = agency.Agency(Agent)

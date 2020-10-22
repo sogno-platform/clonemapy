@@ -52,8 +52,8 @@ import queue
 import threading
 import cmapy.schemas as schemas
 import cmapy.df as df
-import cmapy.iot as iot
 from typing import Callable, Dict
+import time
 # from collections.abc import Callable
 
 
@@ -108,6 +108,10 @@ class Agent():
         self.df = DF(info.masid, info.id, info.spec.nodeid)
         self.mqtt = MQTT()
         # self.task()
+
+    def loop_forever(self):
+        while True:
+            time.sleep(100)
 
     def task(self):
         """
@@ -182,15 +186,19 @@ class ACL():
         super().__init__()
         self._id = agent_id
         self._msg_in = msg_in
+        self._msg_in_default = queue.Queue(1000)
         self._msg_out = msg_out
         self._msg_in_protocol = {}
         self._lock = threading.Lock()
+        x = threading.Thread(target=self._handle_messages)
+        x.start()
 
     def recv_message_wait(self) -> schemas.ACLMessage:
         """
         reads one message from incoming message queue; blocks if empty
         """
-        msg = self._msg_in.get()
+        msg = self._msg_in_default.get()
+
         return msg
 
     def recv_messages(self) -> list:
@@ -200,7 +208,7 @@ class ACL():
         msgs = []
         while True:
             try: 
-                msg = self._msg_in.get(block=False)
+                msg = self._msg_in_default.get(block=False)
                 msgs.append(msg)
             except queue.Empty:
                 break
@@ -213,15 +221,21 @@ class ACL():
         msg.sender = self._id
         self._msg_out.put(msg)
 
+    def _handle_messages(self):
+        while True:
+            msg = self._msg_in.get()
+            self._route_message(msg)
+
     def _route_message(self, msg: schemas.ACLMessage):
         """
         routes the message to the correct protocol queue or to the general queue if no behavior for the protocol is specified
         """
+        print("received msg")
         self._lock.acquire()
         q = self._msg_in_protocol.get(msg.protocol, None)
         self._lock.release()
         if q == None:
-            self._msg_in.put(msg)
+            self._msg_in_default.put(msg)
         else:
             q.put(msg)
 
@@ -260,52 +274,113 @@ class MQTT():
         super().__init__()
         mqtt_on = os.environ['CLONEMAP_MQTT']
         if mqtt_on == "ON":
-            self.mqtt_on = True
-            self.mqtt_client = iot.mqtt_connect()
+            self._on = True
+            self._connect()
+            self._msg_in_default = queue.Queue(1000)
+            self._msg_in_topic = {}
         else:
-            self.mqtt_on = False
+            self._on = False
+        self._lock = threading.Lock()
 
     def subscribe(self, topic: str):
         """
         subscribe to a mqtt topic
         """
-        if not self.mqtt_on:
+        if not self._on:
             return
-        self.mqtt_client.subscribe(topic)
+        self._client.subscribe(topic)
 
     def publish(self, topic: str, payload: str =None, qos: int =0, retain: bool =False):
         """
         publishes a mqtt message to a topic
         """
-        if not self.mqtt_on:
+        if not self._on:
             return
-        self.mqtt_client.publish(topic, payload, qos, retain)
+        self._client.publish(topic, payload, qos, retain)
 
     def recv_msg(self) -> mqtt.MQTTMessage:
         """
         reads one message from incoming message queue; blocks if empty
         """
-        if not self.mqtt_on:
+        if not self._on:
             return None
-        msg = self.mqtt_client.msg_in_queue.get()
+        msg = self._msg_in_default.get()
         return msg
 
     def recv_latest_msg(self) -> mqtt.MQTTMessage:
         """
         reads the latest message from incoming queue and discards all older messages; blocks is queue is empty
         """
-        if not self.mqtt_on:
+        if not self._on:
             return None
-        num_msg = self.mqtt_client.msg_in_queue.qsize()
+        num_msg = self._msg_in_default.qsize()
         if num_msg == 0:
             # queue is empty wait for next message
-            msg = self.mqtt_client.msg_in_queue.get()
+            msg = self._msg_in_default.get()
         else:
             # discard num-msg-1 messages and return latest message
             for i in range(num_msg-1):
-                msg = self.mqtt_client.msg_in_queue.get()
-            msg = self.mqtt_client.msg_in_queue.get()
+                msg = self._msg_in_default.get()
+            msg = self._msg_in_default.get()
         return msg
+
+    def _on_connect(self, client: mqtt.Client, userdata, flags, rc):
+        pass
+
+    def _on_message(self, client: mqtt.Client, userdata, msg):
+        """
+        add received mqtt message to message queue
+        """
+        self._route_message(msg)
+
+    def _connect(self):
+        """
+        connect to broker, start listening for messages and return client
+        """
+        self._client = mqtt.Client()
+        self._client.on_connect = self._on_connect
+        self._client.on_message = self._on_message
+        self._client.connect("mqtt", 1883, 60)
+        self._client.loop_start()
+
+    def _disconnect(self):
+        """
+        disconnect from broker
+        """
+        self._client.loop_stop()
+        self._client.disconnect()
+
+    def _route_message(self, msg: mqtt.MQTTMessage):
+        """
+        routes the message to the correct protocol queue or to the general queue if no behavior for the protocol is specified
+        """
+        print("received msg")
+        self._lock.acquire()
+        q = self._msg_in_topic.get(msg.topic, None)
+        self._lock.release()
+        if q == None:
+            self._msg_in_default.put(msg)
+        else:
+            q.put(msg)
+
+    def new_behavior(self, topic: str, handle: Callable[[mqtt.MQTTMessage], None]) -> Behavior:
+        """
+        creates a new mqtt behavior
+        """
+        beh = MQTTBehavior(self, topic, handle)
+        return beh
+
+    def _register_behavior(self, topic: str) -> queue.Queue:
+        q = queue.Queue(1000)
+        self._lock.acquire()
+        self._msg_in_topic[topic] = q
+        self._lock.release()
+        return q
+
+    def _de_register_behavior(self, topic: str):
+        self._lock.acquire()
+        self._msg_in_topic.pop(topic, None)
+        self._lock.release()
 
 
 class DF():
@@ -447,7 +522,9 @@ class ACLBehavior(Behavior):
         """
         starts the behavior
         """
-        pass
+        self.q = self.acl._register_behavior(self.protocol)
+        x = threading.Thread(target=self._task)
+        x.start()
 
     def stop(self):
         """
@@ -459,7 +536,9 @@ class ACLBehavior(Behavior):
         """
         behavior task
         """
-        pass
+        while True:
+            msg = self.q.get()
+            self.handleDefault(msg)
 
 
 class MQTTBehavior(Behavior):
@@ -476,7 +555,9 @@ class MQTTBehavior(Behavior):
         """
         starts the behavior
         """
-        pass
+        self.q = self.mqtt._register_behavior(self.topic)
+        x = threading.Thread(target=self._task)
+        x.start()
 
     def stop(self):
         """
@@ -488,7 +569,9 @@ class MQTTBehavior(Behavior):
         """
         behavior task
         """
-        pass
+        while True:
+            msg = self.q.get()
+            self.handle(msg)
 
 
 class PeriodicBehavior(Behavior):

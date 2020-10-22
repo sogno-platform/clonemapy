@@ -46,7 +46,9 @@ This module implements the agent class for the pingpong benchmark
 
 import json
 import time
+import paho.mqtt.client as mqtt
 import cmapy.agent as agent
+import cmapy.agency as agency
 import cmapy.schemas as schemas
 
 class CustomData():
@@ -76,12 +78,38 @@ class CustomData():
 class Agent(agent.Agent):
     def __init__(self, info, msg_in, msg_out, log_out):
         super().__init__(info, msg_in, msg_out, log_out)
-        self.pingpong()
+        # self.test()
+
+    def task(self):
+        self.logger.new_log("status", "Starting Test Behavior", "")
+        b_acl = self.acl.new_behavior(1, {}, self.handle_acl)
+        b_acl.start()
+        b_mqtt = self.mqtt.new_behavior("testtopic", self.handle_mqtt)
+        b_mqtt.start()
+        msg = schemas.ACLMessage()
+        if self.id == 0:
+            msg.receiver = 1
+        else:
+            msg.receiver = 0
+        msg.content = "test"
+        msg.protocol = 1
+        time.sleep(10)
+        self.acl.send_message(msg)
+        self.mqtt.subscribe("testtopic")
+        self.mqtt.publish("testtopic", "testpayload"+str(self.id))
+        self.loop_forever()
+
+    def handle_acl(self, msg: schemas.ACLMessage):
+        print(msg.content)
+        self.logger.new_log("status", msg.content, "")
+
+    def handle_mqtt(self, msg: mqtt.MQTTMessage):
+        print(msg.payload)
 
     def pingpong(self):
         cust = CustomData()
         cust.from_json(self.custom)
-        self.new_log("status", "Starting PingPong Behavior; Peer: "+str(cust.peerid)+", Start: "+
+        self.logger.new_log("status", "Starting PingPong Behavior; Peer: "+str(cust.peerid)+", Start: "+
             str(cust.start), "")
         time.sleep(40)
         if cust.start:
@@ -91,13 +119,13 @@ class Agent(agent.Agent):
             msg.content = "test msg"
             for i in range(1000):
                 msg.receiver = cust.peerid
-                self.send_msg(msg)
-                msg = self.recv_msg()
+                self.acl.send_message(msg)
+                msg = self.acl.recv_message_wait()
             for i in range(1000):
                 msg.receiver = cust.peerid
                 tstart = time.perf_counter()
-                self.send_msg(msg)
-                msg = self.recv_msg()
+                self.acl.send_message(msg)
+                msg = self.acl.recv_message_wait()
                 tstop = time.perf_counter()
                 rtt = int((tstop - tstart)*1000000)
                 rtts.append(rtt)
@@ -113,14 +141,16 @@ class Agent(agent.Agent):
                 sum += rtts[i]
             avg = int(sum/1000)
             js = json.dumps(rtts)
-            self.new_log("status", "RTT in µs: min: "+str(min)+", max: "+str(max)+", avg: "+str(avg), js)
+            self.logger.new_log("status", "RTT in µs: min: "+str(min)+", max: "+str(max)+", avg: "+str(avg), js)
             for i in range(1000):
                 msg.receiver = cust.peerid
-                self.send_msg(msg)
-                msg = self.recv_msg()
+                self.acl.send_message(msg)
+                msg = self.acl.recv_message_wait()
         else:
             while True:
-                msg = self.recv_msg()
+                msg = self.acl.recv_message_wait()
                 msg.receiver = msg.sender
-                self.send_msg(msg)
+                self.acl.send_message(msg)
 
+if __name__ == "__main__":
+    ag = agency.Agency(Agent)

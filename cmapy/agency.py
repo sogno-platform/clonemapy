@@ -66,7 +66,6 @@ import cmapy.schemas as schemas
 import cmapy.ams as ams
 import cmapy.agent as agent
 import cmapy.logger as logger
-import cmapy.benchmark as benchmark
 
 class AgencyHandler(server.BaseHTTPRequestHandler):
     """
@@ -333,7 +332,7 @@ class Agency:
         executes agent in seperate process
         """
         ag_handler = AgentHandler()
-        p = multiprocessing.Process(target=self.ag_class, args=(agentinfo, ag_handler.msg_in, self.msg_out, self.log_out,))
+        p = multiprocessing.Process(target=agent_starter, args=(self.ag_class, agentinfo, ag_handler.msg_in, self.msg_out, self.log_out,))
         p.start()
         ag_handler.proc = p
         self.lock.acquire()
@@ -408,6 +407,8 @@ def remote_agency_sender(address: str, out: queue.Queue):
         resp = requests.post("http://"+address+":10000/api/agency/msgs", data=js)
         if resp.status_code != 201:
             pass
+        print("sent msg")
 
-if __name__ == "__main__":
-    ag = Agency(benchmark.Agent)
+def agent_starter(agent_class: agent.Agent, info: schemas.AgentInfo, msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
+    ag = agent_class(info, msg_in, msg_out, log_out)
+    ag.task()

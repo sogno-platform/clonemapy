@@ -230,7 +230,6 @@ class ACL():
         """
         routes the message to the correct protocol queue or to the general queue if no behavior for the protocol is specified
         """
-        print("received msg")
         self._lock.acquire()
         q = self._msg_in_protocol.get(msg.protocol, None)
         self._lock.release()
@@ -354,7 +353,6 @@ class MQTT():
         """
         routes the message to the correct protocol queue or to the general queue if no behavior for the protocol is specified
         """
-        print("received msg")
         self._lock.acquire()
         q = self._msg_in_topic.get(msg.topic, None)
         self._lock.release()

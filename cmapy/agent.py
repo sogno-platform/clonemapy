@@ -368,11 +368,21 @@ class MQTT():
         beh = MQTTBehavior(self, topic, handle)
         return beh
 
+    def new_default_behavior(self, handle: Callable[[mqtt.MQTTMessage], None]) -> Behavior:
+        """
+        creates a new mqtt behavior
+        """
+        beh = MQTTBehavior(self, "#", handle)
+        return beh
+
     def _register_behavior(self, topic: str) -> queue.Queue:
-        q = queue.Queue(1000)
-        self._lock.acquire()
-        self._msg_in_topic[topic] = q
-        self._lock.release()
+        if topic == "#":
+            q = self._msg_in_default
+        else:
+            q = queue.Queue(1000)
+            self._lock.acquire()
+            self._msg_in_topic[topic] = q
+            self._lock.release()
         return q
 
     def _de_register_behavior(self, topic: str):

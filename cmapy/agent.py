@@ -41,7 +41,8 @@
 # THE SOFTWARE.
 
 """
-This module implements the base class Agent which is to be used for the agent behavior implementation
+This module implements the base class Agent which is to be used for the agent behavior
+implementation
 """
 
 import os
@@ -94,7 +95,8 @@ class Agent():
     mqtt_on: bool
              switch for mqtt
     """
-    def __init__(self, info: schemas.AgentInfo, msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
+    def __init__(self, info: schemas.AgentInfo, msg_in: multiprocessing.Queue,
+                 msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
         super().__init__()
         self.id = info.id
         self.nodeid = info.spec.nodeid
@@ -117,10 +119,10 @@ class Agent():
         """
         test behavior
         """
-        print("This is agent "+ str(self.id))
+        print("This is agent " + str(self.id))
         msg = schemas.ACLMessage()
-        msg.content = "Message from agent "+ str(self.id)
-        msg.receiver = (self.id+1)%2
+        msg.content = "Message from agent " + str(self.id)
+        msg.receiver = (self.id+1) % 2
         self.acl.send_message(msg)
         msg = self.acl.recv_message_wait()
         print(msg.content)
@@ -207,7 +209,7 @@ class ACL():
         """
         msgs = []
         while True:
-            try: 
+            try:
                 msg = self._msg_in_default.get(block=False)
                 msgs.append(msg)
             except queue.Empty:
@@ -228,17 +230,20 @@ class ACL():
 
     def _route_message(self, msg: schemas.ACLMessage):
         """
-        routes the message to the correct protocol queue or to the general queue if no behavior for the protocol is specified
+        routes the message to the correct protocol queue or to the general queue if no behavior for
+        the protocol is specified
         """
         self._lock.acquire()
         q = self._msg_in_protocol.get(msg.protocol, None)
         self._lock.release()
-        if q == None:
+        if q is None:
             self._msg_in_default.put(msg)
         else:
             q.put(msg)
 
-    def new_behavior(self, protocol: int, handlePerformative: Dict[int, Callable[[schemas.ACLMessage], None]], handleDefault: Callable[[schemas.ACLMessage], None]) -> Behavior:
+    def new_behavior(self, protocol: int,
+                     handlePerformative: Dict[int, Callable[[schemas.ACLMessage], None]],
+                     handleDefault: Callable[[schemas.ACLMessage], None]) -> Behavior:
         """
         creates a new acl behavior
         """
@@ -289,7 +294,7 @@ class MQTT():
             return
         self._client.subscribe(topic)
 
-    def publish(self, topic: str, payload: str =None, qos: int =0, retain: bool =False):
+    def publish(self, topic: str, payload: str = None, qos: int = 0, retain: bool = False):
         """
         publishes a mqtt message to a topic
         """
@@ -308,7 +313,8 @@ class MQTT():
 
     def recv_latest_msg(self) -> mqtt.MQTTMessage:
         """
-        reads the latest message from incoming queue and discards all older messages; blocks is queue is empty
+        reads the latest message from incoming queue and discards all older messages; blocks is
+        queue is empty
         """
         if not self._on:
             return None
@@ -351,12 +357,13 @@ class MQTT():
 
     def _route_message(self, msg: mqtt.MQTTMessage):
         """
-        routes the message to the correct protocol queue or to the general queue if no behavior for the protocol is specified
+        routes the message to the correct protocol queue or to the general queue if no behavior for
+        the protocol is specified
         """
         self._lock.acquire()
         q = self._msg_in_topic.get(msg.topic, None)
         self._lock.release()
-        if q == None:
+        if q is None:
             self._msg_in_default.put(msg)
         else:
             q.put(msg)
@@ -429,7 +436,7 @@ class DF():
         if svc.desc == "":
             return -1
         temp = self.registered_svcs.get(svc.desc, None)
-        if temp != None:
+        if temp is not None:
             return -1
         svc.created = datetime.now()
         svc.changed = datetime.now()
@@ -519,7 +526,9 @@ class ACLBehavior(Behavior):
     """
     reactive behavior executed when ACL message is received
     """
-    def __init__(self, acl: ACL, protocol: int, handlePerformative: Dict[int, Callable[[schemas.ACLMessage], None]], handleDefault: Callable[[schemas.ACLMessage], None]):
+    def __init__(self, acl: ACL, protocol: int,
+                 handlePerformative: Dict[int, Callable[[schemas.ACLMessage], None]],
+                 handleDefault: Callable[[schemas.ACLMessage], None]):
         super().__init__
         self.acl = acl
         self.protocol = protocol

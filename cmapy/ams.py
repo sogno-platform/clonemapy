@@ -48,25 +48,30 @@ import cmapy.schemas as schemas
 
 Host = "http://ams:9000"
 
+
 def get_agency_info_full(masid: int, imid: int, agencyid: int) -> schemas.AgencyInfoFull:
     """
     get configuration of agency
     """
     info = schemas.AgencyInfoFull()
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid)+"/agency/"+str(agencyid))
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid)+"/agency/" +
+                        str(agencyid))
     if resp.status_code == 200:
         info.from_json(resp.text)
     return info
+
 
 def get_container_agency_info_full(masid: int, imid: int, agencyid: int) -> schemas.AgencyInfoFull:
     """
     get configuration of agency
     """
     info = schemas.AgencyInfoFull()
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/container/"+str(imid)+"/"+str(agencyid))
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/container/"+str(imid)+"/" +
+                        str(agencyid))
     if resp.status_code == 200:
         info.from_json(resp.text)
     return info
+
 
 def get_agent_address(masid: int, agentid: int) -> schemas.Address:
     """

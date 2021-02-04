@@ -50,6 +50,7 @@ import cmapy.schemas as schemas
 
 Host = "http://df:12000"
 
+
 def post_svc(masid: int, svc: schemas.Service) -> schemas.Service:
     """
     post service to DF
@@ -62,6 +63,7 @@ def post_svc(masid: int, svc: schemas.Service) -> schemas.Service:
         logging.error("DF error")
     return svc
 
+
 def get_svc(masid: int, desc: str) -> list:
     """
     request services with matching description
@@ -70,7 +72,7 @@ def get_svc(masid: int, desc: str) -> list:
     resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc)
     if resp.status_code == 200:
         svc_dicts = json.loads(resp.text)
-        if svc_dicts == None:
+        if svc_dicts is None:
             return svcs
         for i in svc_dicts:
             svc = schemas.Service()
@@ -79,16 +81,18 @@ def get_svc(masid: int, desc: str) -> list:
     else:
         logging.error("DF error")
     return svcs
+
 
 def get_local_svc(masid: int, desc: str, nodeid: int, dist: float) -> list:
     """
     request local services with matching description
     """
     svcs = []
-    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/"+str(dist))
+    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/" +
+                        str(dist))
     if resp.status_code == 200:
         svc_dicts = json.loads(resp.text)
-        if svc_dicts == None:
+        if svc_dicts is None:
             return svcs
         for i in svc_dicts:
             svc = schemas.Service()
@@ -98,7 +102,8 @@ def get_local_svc(masid: int, desc: str, nodeid: int, dist: float) -> list:
         logging.error("DF error")
     return svcs
 
-def delete_svc(masid:int , svcid: int):
+
+def delete_svc(masid: int, svcid: int):
     """
     delete service with svcid
     """

@@ -44,11 +44,11 @@
 This module implements an agency compliant with the cloneMAP API.
 
 Start the Agency by creating an object of the agency class. It takes the agent class that implements
-the agent behavior to be executed as input parameter. The agent class must be derived from Agent in 
+the agent behavior to be executed as input parameter. The agent class must be derived from Agent in
 the agent module.
 
-The agency starts an http server which serves the cloneMAP agency API. The agency takes care of 
-starting each agent wihin a seperate process. Moreover, it manages the messaging among local and 
+The agency starts an http server which serves the cloneMAP agency API. The agency takes care of
+starting each agent wihin a seperate process. Moreover, it manages the messaging among local and
 remote agents.
 """
 
@@ -66,6 +66,7 @@ import cmapy.schemas as schemas
 import cmapy.ams as ams
 import cmapy.agent as agent
 import cmapy.logger as logger
+
 
 class AgencyHandler(server.BaseHTTPRequestHandler):
     """
@@ -124,7 +125,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         stat = schemas.Status()
         return stat.to_json()
-    
+
     def do_POST(self):
         """
         handler function for POST requests
@@ -132,7 +133,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
-        
+
         if len(path) == 4:
             if path[2] == "agency" and path[3] == "agents":
                 self.handle_post_agent()
@@ -161,7 +162,12 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         handler function for post request to /api/agency/agents
         """
-        pass
+        content_len = int(self.headers.get('Content-Length'))
+        body = self.rfile.read(content_len)
+        agentinfo_dict = json.loads(str(body, 'utf-8'))
+        agentinfo = schemas.AgentInfo()
+        agentinfo.from_json_dict(agentinfo_dict)
+        self.server.agency.create_agent(agentinfo)
 
     def handle_post_msgs(self):
         """
@@ -179,7 +185,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.server.agency.lock.acquire()
             local_agent = self.server.agency.local_agents.get(i.receiver, None)
             self.server.agency.lock.release()
-            if local_agent != None:
+            if local_agent is not None:
                 local_agent.msg_in.put(i)
 
     def handle_post_uneliv_msg(self):
@@ -195,7 +201,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
-        
+
         if len(path) == 5:
             if path[2] == "agency" and path[3] == "agents":
                 try:
@@ -204,7 +210,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
                     resvalid = True
                 except ValueError:
                     pass
-        
+
         if resvalid:
             ret = "Ressource deleted"
             self.send_response(200)
@@ -224,12 +230,13 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         self.server.agency.lock.acquire()
         handler = self.server.agency.local_agents.get(agentid, None)
-        if handler == None:
+        if handler is None:
             pass
         else:
             handler.proc.terminate()
             del self.server.agency.local_agents[agentid]
         self.server.agency.lock.release()
+
 
 class AgentHandler:
     """
@@ -238,6 +245,7 @@ class AgentHandler:
     def __init__(self):
         super().__init__()
         self.msg_in = multiprocessing.Queue(100)
+
 
 class Agency:
     """
@@ -256,7 +264,7 @@ class Agency:
     info : schemas.AgencyInfo
            information about the agency (agency name, agent configuration, ...)
     ag_class : class derived from agent.Agent
-               implementation of agent behavior; one ag_class object for each agent is created in a 
+               implementation of agent behavior; one ag_class object for each agent is created in a
                seperate process
     local_agents : dictionary of AgentHandler
                    each local agent has a queue for incoming messages; this is stored in its handler
@@ -286,13 +294,13 @@ class Agency:
             log_type = os.environ['CLONEMAP_LOG_LEVEL']
             if log_type == "info":
                 logging.basicConfig(format='%(asctime)s - [%(levelname)s] - %(message)s',
-                    level=logging.INFO)
+                                    level=logging.INFO)
             else:
                 logging.basicConfig(format='%(asctime)s - [%(levelname)s] - %(message)s',
-                    level=logging.ERROR)
+                                    level=logging.ERROR)
         except KeyError:
             logging.basicConfig(format='%(asctime)s - [%(levelname)s] - %(message)s',
-                level=logging.ERROR)
+                                level=logging.ERROR)
 
         temp = socket.gethostname()
         logging.info("Starting agency " + temp)
@@ -326,13 +334,14 @@ class Agency:
                 self.create_agent(i)
         else:
             logging.error("Received invalid agency info from AMS")
-    
+
     def create_agent(self, agentinfo: schemas.AgentInfo):
         """
         executes agent in seperate process
         """
         ag_handler = AgentHandler()
-        p = multiprocessing.Process(target=agent_starter, args=(self.ag_class, agentinfo, ag_handler.msg_in, self.msg_out, self.log_out,))
+        p = multiprocessing.Process(target=agent_starter, args=(self.ag_class, agentinfo,
+                                    ag_handler.msg_in, self.msg_out, self.log_out,))
         p.start()
         ag_handler.proc = p
         self.lock.acquire()
@@ -360,11 +369,11 @@ class Agency:
             local_agent = self.local_agents.get(recv, None)
             recv_agency = self.remote_agents.get(recv, None)
             self.lock.release()
-            if local_agent != None:
+            if local_agent is not None:
                 # agent is local -> add message to its queue
                 local_agent.msg_in.put(msg)
                 continue
-            elif recv_agency == None:
+            elif recv_agency is None:
                 # agent is non-local, but address of agent is unknown -> request agent address
                 self.lock.acquire()
                 masid = self.info.masid
@@ -377,7 +386,7 @@ class Agency:
                 # check if agency of remote agent is known
                 agency = self.remote_agencies.get(addr.agency, None)
                 self.lock.release()
-                if agency == None:
+                if agency is None:
                     # remote agency is not known -> create a queue for messages to this agency and
                     # start a sender in a new thread
                     agency = queue.Queue(1000)
@@ -385,7 +394,7 @@ class Agency:
                     self.remote_agencies[addr.agency] = agency
                     self.lock.release()
                     y = threading.Thread(target=remote_agency_sender, args=(addr.agency, agency,),
-                        daemon=True)
+                                         daemon=True)
                     y.start()
                 self.lock.acquire()
                 self.remote_agents[recv] = agency
@@ -393,6 +402,7 @@ class Agency:
                 recv_agency = agency
             # add message to queue of remote agent
             recv_agency.put(msg)
+
 
 def remote_agency_sender(address: str, out: queue.Queue):
     """
@@ -409,6 +419,11 @@ def remote_agency_sender(address: str, out: queue.Queue):
             pass
         print("sent msg")
 
-def agent_starter(agent_class: agent.Agent, info: schemas.AgentInfo, msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
+
+def agent_starter(agent_class: agent.Agent, info: schemas.AgentInfo, msg_in: multiprocessing.Queue,
+                  msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
+    """
+    starting agent; this function is to be called in a separate process
+    """
     ag = agent_class(info, msg_in, msg_out, log_out)
     ag.task()

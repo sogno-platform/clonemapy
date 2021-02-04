@@ -50,6 +50,7 @@ import cmapy.agent as agent
 import cmapy.agency as agency
 import cmapy.schemas as schemas
 
+
 class AgentData():
     def __init__(self):
         self.testdata = 0
@@ -70,17 +71,18 @@ class AgentData():
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
 
+
 class Agent(agent.Agent):
     def __init__(self, info, msg_in, msg_out, log_out):
         super().__init__(info, msg_in, msg_out, log_out)
         self.task()
 
     def task(self):
-        self.logger.new_log("app", "This is agent "+ str(self.id), "")
-        self.mqtt.subscribe("testtopic"+str((self.id+1)%2))
+        self.logger.new_log("app", "This is agent " + str(self.id), "")
+        self.mqtt.subscribe("testtopic"+str((self.id+1) % 2))
         msg = schemas.ACLMessage()
-        msg.content = "Message from agent "+ str(self.id)
-        msg.receiver = (self.id+1)%2
+        msg.content = "Message from agent " + str(self.id)
+        msg.receiver = (self.id+1) % 2
         self.acl.send_message(msg)
         msg = self.acl.recv_message_wait()
         self.logger.new_log("app", msg.content, "")
@@ -89,6 +91,7 @@ class Agent(agent.Agent):
         time.sleep(5)
         msg = self.mqtt.recv_latest_msg()
         self.logger.new_log("app", str(msg.payload, 'utf-8'), "")
+
 
 if __name__ == "__main__":
     ag = agency.Agency(Agent)

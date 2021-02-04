@@ -52,6 +52,7 @@ import queue
 
 Host = "http://logger:11000"
 
+
 def post_logs(masid: int, logs: list):
     """
     post array of log messages to logger
@@ -65,6 +66,7 @@ def post_logs(masid: int, logs: list):
     if resp.status_code != 201:
         logging.error("Logger error")
 
+
 def put_state(masid: int, agentid: int, state: schemas.State):
     """
     update state of agent
@@ -73,6 +75,7 @@ def put_state(masid: int, agentid: int, state: schemas.State):
     resp = requests.post(Host+"/api/state/"+str(masid)+"/"+str(agentid), data=js)
     if resp.status_code != 201:
         logging.error("Logger error")
+
 
 def get_state(masid: int, agentid: int) -> schemas.State:
     """
@@ -83,6 +86,7 @@ def get_state(masid: int, agentid: int) -> schemas.State:
     if resp.status_code == 200:
         state.from_json(resp.text)
     return state
+
 
 def send_logs(masid: int, log_queue: queue.Queue):
     """

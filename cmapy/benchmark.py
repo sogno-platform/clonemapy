@@ -51,6 +51,7 @@ import cmapy.agent as agent
 import cmapy.agency as agency
 import cmapy.schemas as schemas
 
+
 class CustomData():
     def __init__(self):
         self.benchid = 0
@@ -74,6 +75,7 @@ class CustomData():
     def from_json(self, js):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class Agent(agent.Agent):
     def __init__(self, info, msg_in, msg_out, log_out):
@@ -109,8 +111,8 @@ class Agent(agent.Agent):
     def pingpong(self):
         cust = CustomData()
         cust.from_json(self.custom)
-        self.logger.new_log("status", "Starting PingPong Behavior; Peer: "+str(cust.peerid)+", Start: "+
-            str(cust.start), "")
+        self.logger.new_log("status", "Starting PingPong Behavior; Peer: "+str(cust.peerid) +
+                            ", Start: " + str(cust.start), "")
         time.sleep(40)
         if cust.start:
             rtts = []
@@ -141,7 +143,8 @@ class Agent(agent.Agent):
                 sum += rtts[i]
             avg = int(sum/1000)
             js = json.dumps(rtts)
-            self.logger.new_log("status", "RTT in µs: min: "+str(min)+", max: "+str(max)+", avg: "+str(avg), js)
+            self.logger.new_log("status", "RTT in µs: min: "+str(min)+", max: "+str(max)+", avg: " +
+                                str(avg), js)
             for i in range(1000):
                 msg.receiver = cust.peerid
                 self.acl.send_message(msg)
@@ -151,6 +154,7 @@ class Agent(agent.Agent):
                 msg = self.acl.recv_message_wait()
                 msg.receiver = msg.sender
                 self.acl.send_message(msg)
+
 
 if __name__ == "__main__":
     ag = agency.Agency(Agent)

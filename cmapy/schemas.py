@@ -46,6 +46,7 @@ This module implements the cloneMAP schemas with json marshalling/unmarshalling
 import json
 from datetime import datetime
 
+
 class LogConfig():
     """
     contains configuration of logging service
@@ -91,6 +92,7 @@ class LogConfig():
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
 
+
 class Status():
     """
     contains information about an agent's or agency's status
@@ -123,11 +125,12 @@ class Status():
     def from_json_dict(self, js_dict: dict):
         self.code = js_dict.get("code", 0)
         self.last_update = datetime.strptime(js_dict.get("lastupdate", "0000-00-00T00:00:00Z"),
-            "%Y-%m-%dT%H:%M:%SZ")
+                                             "%Y-%m-%dT%H:%M:%SZ")
 
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class AgencyInfoFull():
     """
@@ -162,8 +165,8 @@ class AgencyInfoFull():
 
     def to_json_dict(self) -> dict:
         js_dict = {"masid": self.masid, "name": self.name, "id": self.id,
-            "imid": self.imagegroupid, "log": self.logger.to_json_dict(),
-            "status": self.status.to_json_dict()}
+                   "imid": self.imagegroupid, "log": self.logger.to_json_dict(),
+                   "status": self.status.to_json_dict()}
         ag_dicts = []
         for i in self.agents:
             ag_dicts.append(i.to_json_dict())
@@ -192,10 +195,10 @@ class AgencyInfoFull():
             ag.from_json_dict(i)
             self.agents.append(ag)
 
-
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class AgencyInfo():
     """
@@ -230,8 +233,8 @@ class AgencyInfo():
 
     def to_json_dict(self) -> dict:
         js_dict = {"masid": self.masid, "name": self.name, "id": self.id,
-            "imid": self.imagegroupid, "log": self.logger.to_json_dict(), "agents": self.agents,
-            "status": self.status.to_json_dict()}
+                   "imid": self.imagegroupid, "log": self.logger.to_json_dict(),
+                   "agents": self.agents, "status": self.status.to_json_dict()}
         return js_dict
 
     def to_json(self) -> str:
@@ -255,6 +258,7 @@ class AgencyInfo():
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class AgentSpec():
     """
@@ -283,8 +287,8 @@ class AgentSpec():
 
     def to_json_dict(self) -> dict:
         js_dict = {"nodeid": self.nodeid,
-            "name": self.name, "type": self.type, "subtype": self.subtype,
-            "custom": self.custom}
+                   "name": self.name, "type": self.type, "subtype": self.subtype,
+                   "custom": self.custom}
         return js_dict
 
     def to_json(self) -> str:
@@ -306,6 +310,7 @@ class AgentSpec():
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class Address():
     """
@@ -340,6 +345,7 @@ class Address():
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
 
+
 class AgentInfo():
     """
     contains information about agent spec, address, communication, mqtt and status
@@ -371,8 +377,8 @@ class AgentInfo():
 
     def to_json_dict(self) -> dict:
         js_dict = {"spec": self.spec.to_json_dict(), "masid": self.masid, "agencyid": self.agencyid,
-            "imid": self.imagegroupid, "id": self.id, "address": self.address.to_json_dict(),
-            "status": self.status.to_json_dict()}
+                   "imid": self.imagegroupid, "id": self.id, "address": self.address.to_json_dict(),
+                   "status": self.status.to_json_dict()}
         return js_dict
 
     def to_json(self) -> str:
@@ -396,6 +402,7 @@ class AgentInfo():
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class ACLMessage:
     """
@@ -457,8 +464,8 @@ class ACLMessage:
 
     def to_json_dict(self) -> dict:
         js_dict = {"ts": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"), "perf": self.performative,
-            "sender": self.sender, "agencys": self.agency_sender, "receiver": self.receiver,
-            "agencyr": self.agency_receiver, "content": self.content, "prot": self.protocol}
+                   "sender": self.sender, "agencys": self.agency_sender, "receiver": self.receiver,
+                   "agencyr": self.agency_receiver, "content": self.content, "prot": self.protocol}
         if self.reply_to != 0:
             js_dict["repto"] = self.reply_to
         if self.language != "":
@@ -485,7 +492,8 @@ class ACLMessage:
         return js_res
 
     def from_json_dict(self, js_dict: dict):
-        self.timestamp = datetime.strptime(js_dict.get("ts", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = datetime.strptime(js_dict.get("ts", "0000-00-00T00:00:00Z"),
+                                           "%Y-%m-%dT%H:%M:%SZ")
         self.performative = js_dict.get("perf", 0)
         self.sender = js_dict.get("sender", 0)
         self.agency_sender = js_dict.get("agencys", "")
@@ -500,11 +508,13 @@ class ACLMessage:
         self.conversation_id = js_dict.get("convid", 0)
         self.reply_with = js_dict.get("repwith", "")
         self.in_reply_to = js_dict.get("inrepto", 0)
-        self.reply_by = datetime.strptime(js_dict.get("repby", "0001-01-01T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
-        
+        self.reply_by = datetime.strptime(js_dict.get("repby", "0001-01-01T00:00:00Z"),
+                                          "%Y-%m-%dT%H:%M:%SZ")
+
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class LogMessage:
     """
@@ -535,8 +545,9 @@ class LogMessage:
         self.add_data = ""
 
     def to_json_dict(self) -> dict:
-        js_dict = {"masid": self.masid, "agentid": self.agentid, "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "logtype": self.logtype, "msg": self.message}
+        js_dict = {"masid": self.masid, "agentid": self.agentid,
+                   "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                   "logtype": self.logtype, "msg": self.message}
         if self.add_data != "":
             js_dict["data"] = self.add_data
         return js_dict
@@ -553,14 +564,16 @@ class LogMessage:
     def from_json_dict(self, js_dict: dict):
         self.masid = js_dict.get("masid", 0)
         self.agentid = js_dict.get("agentid", 0)
-        self.timestamp = datetime.strptime(js_dict.get("timestamp", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = datetime.strptime(js_dict.get("timestamp", "0000-00-00T00:00:00Z"),
+                                           "%Y-%m-%dT%H:%M:%SZ")
         self.logtype = js_dict.get("logtype", "")
         self.message = js_dict.get("message", "")
         self.add_data = js_dict.get("data", "")
-        
+
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class State:
     """
@@ -585,8 +598,9 @@ class State:
         self.state = ""
 
     def to_json_dict(self) -> dict:
-        js_dict = {"masid": self.masid, "agentid": self.agentid, "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "state": self.state}
+        js_dict = {"masid": self.masid, "agentid": self.agentid,
+                   "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                   "state": self.state}
         return js_dict
 
     def to_json(self) -> str:
@@ -601,12 +615,14 @@ class State:
     def from_json_dict(self, js_dict: dict):
         self.masid = js_dict.get("masid", 0)
         self.agentid = js_dict.get("agentid", 0)
-        self.timestamp = datetime.strptime(js_dict.get("timestamp", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = datetime.strptime(js_dict.get("timestamp", "0000-00-00T00:00:00Z"),
+                                           "%Y-%m-%dT%H:%M:%SZ")
         self.state = js_dict.get("state", "")
-        
+
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)
+
 
 class Service:
     """
@@ -642,8 +658,9 @@ class Service:
 
     def to_json_dict(self) -> dict:
         js_dict = {"id": self.id, "agid": self.agentid, "nodeid": self.nodeid, "masid": self.masid,
-            "crat": self.created.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "chat": self.changed.strftime("%Y-%m-%dT%H:%M:%SZ"), "desc": self.desc, "dist": self.dist}
+                   "crat": self.created.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                   "chat": self.changed.strftime("%Y-%m-%dT%H:%M:%SZ"), "desc": self.desc,
+                   "dist": self.dist}
         return js_dict
 
     def to_json(self) -> str:
@@ -660,11 +677,13 @@ class Service:
         self.agentid = js_dict.get("agid", 0)
         self.nodeid = js_dict.get("nodeid", 0)
         self.masid = js_dict.get("masid", 0)
-        self.created = datetime.strptime(js_dict.get("crat", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
-        self.changed = datetime.strptime(js_dict.get("chat", "0000-00-00T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ")
+        self.created = datetime.strptime(js_dict.get("crat", "0000-00-00T00:00:00Z"),
+                                         "%Y-%m-%dT%H:%M:%SZ")
+        self.changed = datetime.strptime(js_dict.get("chat", "0000-00-00T00:00:00Z"),
+                                         "%Y-%m-%dT%H:%M:%SZ")
         self.desc = js_dict.get("desc", "")
         self.dist = js_dict.get("dist", 0.0)
-        
+
     def from_json(self, js: str):
         js_dict = json.loads(js)
         self.from_json_dict(js_dict)

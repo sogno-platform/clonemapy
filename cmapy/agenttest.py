@@ -45,10 +45,8 @@ This module implements the agent class for the pingpong benchmark
 """
 
 import json
-import time
 import cmapy.agent as agent
 import cmapy.agency as agency
-import cmapy.schemas as schemas
 
 
 class AgentData():
@@ -78,19 +76,7 @@ class Agent(agent.Agent):
         self.task()
 
     def task(self):
-        self.logger.new_log("app", "This is agent " + str(self.id), "")
-        self.mqtt.subscribe("testtopic"+str((self.id+1) % 2))
-        msg = schemas.ACLMessage()
-        msg.content = "Message from agent " + str(self.id)
-        msg.receiver = (self.id+1) % 2
-        self.acl.send_message(msg)
-        msg = self.acl.recv_message_wait()
-        self.logger.new_log("app", msg.content, "")
-        for i in range(5):
-            self.mqtt.publish("testtopic"+str(self.id), "mqtt_test"+str(i))
-        time.sleep(5)
-        msg = self.mqtt.recv_latest_msg()
-        self.logger.new_log("app", str(msg.payload, 'utf-8'), "")
+        self.loop_forever()
 
 
 if __name__ == "__main__":

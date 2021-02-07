@@ -120,26 +120,7 @@ class Agent():
         test behavior
         """
         print("This is agent " + str(self.id))
-        msg = schemas.ACLMessage()
-        msg.content = "Message from agent " + str(self.id)
-        msg.receiver = (self.id+1) % 2
-        self.acl.send_message(msg)
-        msg = self.acl.recv_message_wait()
-        print(msg.content)
-        self.logger.new_log("app", "Test log", "test data")
-        svc = schemas.Service()
-        svc.desc = "testsvc"
-        id = self.df.register_service(svc)
-        print(id)
-        temp = self.df.search_for_service("testsvc")
-        for i in temp:
-            print(i.desc)
-        self.mqtt.subscribe("testtopic")
-        self.mqtt.publish("testtopic", "testpayload"+str(self.id))
-        msg = self.mqtt.recv_msg()
-        print(msg.payload)
-        msg = self.mqtt.recv_msg()
-        print(msg.payload)
+        self.loop_forever()
 
 
 class Behavior():
@@ -192,7 +173,7 @@ class ACL():
         self._msg_out = msg_out
         self._msg_in_protocol = {}
         self._lock = threading.Lock()
-        x = threading.Thread(target=self._handle_messages)
+        x = threading.Thread(target=self._handle_messages, daemon=True)
         x.start()
 
     def recv_message_wait(self) -> schemas.ACLMessage:
@@ -540,7 +521,7 @@ class ACLBehavior(Behavior):
         starts the behavior
         """
         self.q = self.acl._register_behavior(self.protocol)
-        x = threading.Thread(target=self._task)
+        x = threading.Thread(target=self._task, daemon=True)
         x.start()
 
     def stop(self):
@@ -573,7 +554,7 @@ class MQTTBehavior(Behavior):
         starts the behavior
         """
         self.q = self.mqtt._register_behavior(self.topic)
-        x = threading.Thread(target=self._task)
+        x = threading.Thread(target=self._task, daemon=True)
         x.start()
 
     def stop(self):

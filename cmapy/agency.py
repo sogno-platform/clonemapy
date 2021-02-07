@@ -62,6 +62,8 @@ import json
 import requests
 import queue
 import logging
+import signal
+import sys
 import cmapy.schemas as schemas
 import cmapy.ams as ams
 import cmapy.agent as agent
@@ -282,6 +284,8 @@ class Agency:
     """
     def __init__(self, ag_class: agent.Agent):
         super().__init__()
+        signal.signal(signal.SIGINT, self.terminate)
+        signal.signal(signal.SIGTERM, self.terminate)
         self.info = schemas.AgencyInfo()
         self.ag_class = ag_class
         self.local_agents = {}
@@ -313,9 +317,9 @@ class Agency:
         self.info.id = int(hostname[5])
         self.info.name = temp + ".mas" + hostname[1] + "agencies"
 
-        x = threading.Thread(target=self.listen)
+        x = threading.Thread(target=self.listen, daemon=True)
         x.start()
-        y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,))
+        y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,), daemon=True)
         y.start()
         self.start_agents()
         time.sleep(5)
@@ -402,6 +406,12 @@ class Agency:
                 recv_agency = agency
             # add message to queue of remote agent
             recv_agency.put(msg)
+
+    def terminate(self, sig, frame):
+        for i in self.local_agents:
+            self.local_agents[i].proc.terminate()
+            logging.info("Stopped agent " + str(i))
+        sys.exit(0)
 
 
 def remote_agency_sender(address: str, out: queue.Queue):

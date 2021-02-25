@@ -165,7 +165,7 @@ class AgencyInfoFull():
 
     def to_json_dict(self) -> dict:
         js_dict = {"masid": self.masid, "name": self.name, "id": self.id,
-                   "imid": self.imagegroupid, "log": self.logger.to_json_dict(),
+                   "imid": self.imagegroupid, "logger": self.logger.to_json_dict(),
                    "status": self.status.to_json_dict()}
         ag_dicts = []
         for i in self.agents:
@@ -187,7 +187,7 @@ class AgencyInfoFull():
         self.name = js_dict.get("name", "")
         self.id = js_dict.get("id", 0)
         self.imagegroupid = js_dict.get("imid", 0)
-        self.logger.from_json_dict(js_dict.get("log", LogConfig()))
+        self.logger.from_json_dict(js_dict.get("logger", LogConfig()))
         self.status = js_dict.get("status", Status())
         ag_dicts = js_dict.get("agents", [])
         for i in ag_dicts:
@@ -233,7 +233,7 @@ class AgencyInfo():
 
     def to_json_dict(self) -> dict:
         js_dict = {"masid": self.masid, "name": self.name, "id": self.id,
-                   "imid": self.imagegroupid, "log": self.logger.to_json_dict(),
+                   "imid": self.imagegroupid, "logger": self.logger.to_json_dict(),
                    "agents": self.agents, "status": self.status.to_json_dict()}
         return js_dict
 
@@ -251,7 +251,7 @@ class AgencyInfo():
         self.name = js_dict.get("name", "")
         self.id = js_dict.get("id", 0)
         self.imagegroupid = js_dict.get("imid", 0)
-        self.logger.from_json_dict(js_dict.get("log", LogConfig()))
+        self.logger.from_json_dict(js_dict.get("logger", LogConfig()))
         self.agents = js_dict.get("agents", [])
         self.status = js_dict.get("status", Status())
 
@@ -528,7 +528,7 @@ class LogMessage:
         ID of the agent
     timestamp : datetime
         time at which log message was created
-    logtype : str
+    topic : str
         topic of the log (app, status, msg, error, debug)
     message : str
         log message
@@ -540,14 +540,14 @@ class LogMessage:
         self.masid = 0
         self.agentid = 0
         self.timestamp = datetime.now()
-        self.logtype = ""
+        self.topic = ""
         self.message = ""
         self.add_data = ""
 
     def to_json_dict(self) -> dict:
         js_dict = {"masid": self.masid, "agentid": self.agentid,
                    "timestamp": self.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                   "logtype": self.logtype, "msg": self.message}
+                   "topic": self.topic, "msg": self.message}
         if self.add_data != "":
             js_dict["data"] = self.add_data
         return js_dict
@@ -566,7 +566,7 @@ class LogMessage:
         self.agentid = js_dict.get("agentid", 0)
         self.timestamp = datetime.strptime(js_dict.get("timestamp", "0000-00-00T00:00:00Z"),
                                            "%Y-%m-%dT%H:%M:%SZ")
-        self.logtype = js_dict.get("logtype", "")
+        self.topic = js_dict.get("topic", "")
         self.message = js_dict.get("message", "")
         self.add_data = js_dict.get("data", "")
 
@@ -658,8 +658,8 @@ class Service:
 
     def to_json_dict(self) -> dict:
         js_dict = {"id": self.id, "agid": self.agentid, "nodeid": self.nodeid, "masid": self.masid,
-                   "crat": self.created.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                   "chat": self.changed.strftime("%Y-%m-%dT%H:%M:%SZ"), "desc": self.desc,
+                   "createdat": self.created.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                   "changedat": self.changed.strftime("%Y-%m-%dT%H:%M:%SZ"), "desc": self.desc,
                    "dist": self.dist}
         return js_dict
 
@@ -677,9 +677,9 @@ class Service:
         self.agentid = js_dict.get("agid", 0)
         self.nodeid = js_dict.get("nodeid", 0)
         self.masid = js_dict.get("masid", 0)
-        self.created = datetime.strptime(js_dict.get("crat", "0000-00-00T00:00:00Z"),
+        self.created = datetime.strptime(js_dict.get("createdat", "0000-00-00T00:00:00Z"),
                                          "%Y-%m-%dT%H:%M:%SZ")
-        self.changed = datetime.strptime(js_dict.get("chat", "0000-00-00T00:00:00Z"),
+        self.changed = datetime.strptime(js_dict.get("changedat", "0000-00-00T00:00:00Z"),
                                          "%Y-%m-%dT%H:%M:%SZ")
         self.desc = js_dict.get("desc", "")
         self.dist = js_dict.get("dist", 0.0)

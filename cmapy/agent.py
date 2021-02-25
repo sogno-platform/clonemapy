@@ -502,14 +502,14 @@ class Logger():
         self.masid = masid
         self.log_out = log_out
 
-    def new_log(self, logtype: str, msg: str, data: str):
+    def new_log(self, topic: str, msg: str, data: str):
         """
         stores one log messages
         """
         log = datamodels.LogMessage()
         log.masid = self.masid
         log.agentid = self.id
-        log.logtype = logtype
+        log.topic = topic
         log.message = msg
         log.add_data = data
         self.log_out.put(log)

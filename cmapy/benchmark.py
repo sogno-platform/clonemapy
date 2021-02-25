@@ -49,7 +49,7 @@ import time
 import paho.mqtt.client as mqtt
 import cmapy.agent as agent
 import cmapy.agency as agency
-import cmapy.schemas as schemas
+import cmapy.datamodels as datamodels
 
 
 class CustomData():
@@ -88,7 +88,7 @@ class Agent(agent.Agent):
         b_acl.start()
         b_mqtt = self.mqtt.new_behavior("testtopic", self.handle_mqtt)
         b_mqtt.start()
-        msg = schemas.ACLMessage()
+        msg = datamodels.ACLMessage()
         if self.id == 0:
             msg.receiver = 1
         else:
@@ -101,7 +101,7 @@ class Agent(agent.Agent):
         self.mqtt.publish("testtopic", "testpayload"+str(self.id))
         self.loop_forever()
 
-    def handle_acl(self, msg: schemas.ACLMessage):
+    def handle_acl(self, msg: datamodels.ACLMessage):
         print(msg.content)
         self.logger.new_log("status", msg.content, "")
 
@@ -116,7 +116,7 @@ class Agent(agent.Agent):
         time.sleep(40)
         if cust.start:
             rtts = []
-            msg = schemas.ACLMessage()
+            msg = datamodels.ACLMessage()
             msg.receiver = cust.peerid
             msg.content = "test msg"
             for i in range(1000):

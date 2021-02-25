@@ -46,7 +46,7 @@ This module implements necessary client methods for the cloneMAP logger
 import requests
 import json
 import logging
-import cmapy.schemas as schemas
+import cmapy.datamodels as datamodels
 import os
 import queue
 
@@ -67,7 +67,7 @@ def post_logs(masid: int, logs: list):
         logging.error("Logger error")
 
 
-def put_state(masid: int, agentid: int, state: schemas.State):
+def put_state(masid: int, agentid: int, state: datamodels.State):
     """
     update state of agent
     """
@@ -77,11 +77,11 @@ def put_state(masid: int, agentid: int, state: schemas.State):
         logging.error("Logger error")
 
 
-def get_state(masid: int, agentid: int) -> schemas.State:
+def get_state(masid: int, agentid: int) -> datamodels.State:
     """
     request state of agent
     """
-    state = schemas.State()
+    state = datamodels.State()
     resp = requests.get(Host+"/api/state/"+str(masid)+"/"+str(agentid))
     if resp.status_code == 200:
         state.from_json(resp.text)

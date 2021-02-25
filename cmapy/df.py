@@ -46,12 +46,12 @@ This module implements necessary client methods for the cloneMAP DF
 import requests
 import json
 import logging
-import cmapy.schemas as schemas
+import cmapy.datamodels as datamodels
 
 Host = "http://df:12000"
 
 
-def post_svc(masid: int, svc: schemas.Service) -> schemas.Service:
+def post_svc(masid: int, svc: datamodels.Service) -> datamodels.Service:
     """
     post service to DF
     """
@@ -75,7 +75,7 @@ def get_svc(masid: int, desc: str) -> list:
         if svc_dicts is None:
             return svcs
         for i in svc_dicts:
-            svc = schemas.Service()
+            svc = datamodels.Service()
             svc.from_json_dict(i)
             svcs.append(svc)
     else:
@@ -95,7 +95,7 @@ def get_local_svc(masid: int, desc: str, nodeid: int, dist: float) -> list:
         if svc_dicts is None:
             return svcs
         for i in svc_dicts:
-            svc = schemas.Service()
+            svc = datamodels.Service()
             svc.from_json_dict(i)
             svcs.append(svc)
     else:

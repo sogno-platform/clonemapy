@@ -64,7 +64,7 @@ import queue
 import logging
 import signal
 import sys
-import cmapy.schemas as schemas
+import cmapy.datamodels as datamodels
 import cmapy.ams as ams
 import cmapy.agent as agent
 import cmapy.logger as logger
@@ -125,7 +125,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         handler function for GET request to /api/agency/agents/{agent-id}/status
         """
-        stat = schemas.Status()
+        stat = datamodels.Status()
         return stat.to_json()
 
     def do_POST(self):
@@ -167,7 +167,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         content_len = int(self.headers.get('Content-Length'))
         body = self.rfile.read(content_len)
         agentinfo_dict = json.loads(str(body, 'utf-8'))
-        agentinfo = schemas.AgentInfo()
+        agentinfo = datamodels.AgentInfo()
         agentinfo.from_json_dict(agentinfo_dict)
         self.server.agency.create_agent(agentinfo)
 
@@ -180,7 +180,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         msg_dicts = json.loads(str(body, 'utf-8'))
         msgs = []
         for i in msg_dicts:
-            msg = schemas.ACLMessage()
+            msg = datamodels.ACLMessage()
             msg.from_json_dict(i)
             msgs.append(msg)
         for i in msgs:
@@ -238,7 +238,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         if handler is None:
             pass
         else:
-            msg = schemas.ACLMessage()
+            msg = datamodels.ACLMessage()
             msg.content = custom
             msg.protocol = -1
             msg.sender = -1
@@ -312,7 +312,7 @@ class Agency:
 
     Attributes
     ----------
-    info : schemas.AgencyInfo
+    info : datamodels.AgencyInfo
            information about the agency (agency name, agent configuration, ...)
     ag_class : class derived from agent.Agent
                implementation of agent behavior; one ag_class object for each agent is created in a
@@ -335,7 +335,7 @@ class Agency:
         super().__init__()
         signal.signal(signal.SIGINT, self.terminate)
         signal.signal(signal.SIGTERM, self.terminate)
-        self.info = schemas.AgencyInfo()
+        self.info = datamodels.AgencyInfo()
         self.ag_class = ag_class
         self.local_agents = {}
         self.msg_out = multiprocessing.Queue(1000)
@@ -388,7 +388,7 @@ class Agency:
         else:
             logging.error("Received invalid agency info from AMS")
 
-    def create_agent(self, agentinfo: schemas.AgentInfo):
+    def create_agent(self, agentinfo: datamodels.AgentInfo):
         """
         executes agent in seperate process
         """
@@ -479,7 +479,7 @@ def remote_agency_sender(address: str, out: queue.Queue):
         print("sent msg")
 
 
-def agent_starter(agent_class: agent.Agent, info: schemas.AgentInfo, msg_in: multiprocessing.Queue,
+def agent_starter(agent_class: agent.Agent, info: datamodels.AgentInfo, msg_in: multiprocessing.Queue,
                   msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
     """
     starting agent; this function is to be called in a separate process

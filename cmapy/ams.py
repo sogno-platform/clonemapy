@@ -44,16 +44,16 @@
 This module implements necessary client methods for the cloneMAP AMS
 """
 import requests
-import cmapy.schemas as schemas
+import cmapy.datamodels as datamodels
 
 Host = "http://ams:9000"
 
 
-def get_agency_info_full(masid: int, imid: int, agencyid: int) -> schemas.AgencyInfoFull:
+def get_agency_info_full(masid: int, imid: int, agencyid: int) -> datamodels.AgencyInfoFull:
     """
     get configuration of agency
     """
-    info = schemas.AgencyInfoFull()
+    info = datamodels.AgencyInfoFull()
     resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid)+"/agency/" +
                         str(agencyid))
     if resp.status_code == 200:
@@ -61,11 +61,11 @@ def get_agency_info_full(masid: int, imid: int, agencyid: int) -> schemas.Agency
     return info
 
 
-def get_container_agency_info_full(masid: int, imid: int, agencyid: int) -> schemas.AgencyInfoFull:
+def get_container_agency_info_full(masid: int, imid: int, agencyid: int) -> datamodels.AgencyInfoFull:
     """
     get configuration of agency
     """
-    info = schemas.AgencyInfoFull()
+    info = datamodels.AgencyInfoFull()
     resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/container/"+str(imid)+"/" +
                         str(agencyid))
     if resp.status_code == 200:
@@ -73,11 +73,11 @@ def get_container_agency_info_full(masid: int, imid: int, agencyid: int) -> sche
     return info
 
 
-def get_agent_address(masid: int, agentid: int) -> schemas.Address:
+def get_agent_address(masid: int, agentid: int) -> datamodels.Address:
     """
     get address of agent
     """
-    addr = schemas.Address()
+    addr = datamodels.Address()
     resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)+"/address")
     if resp.status_code == 200:
         addr.from_json(resp.text)

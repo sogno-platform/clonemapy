@@ -51,7 +51,7 @@ import paho.mqtt.client as mqtt
 import multiprocessing
 import queue
 import threading
-import cmapy.schemas as schemas
+import cmapy.datamodels as datamodels
 import cmapy.df as df
 from typing import Callable, Dict
 import time
@@ -81,7 +81,7 @@ class Agent():
              custom agent configuration
     masid : integer
             ID of MAS agent is located in
-    registered_svcs : dictionary of schemas.Service
+    registered_svcs : dictionary of datamodels.Service
                       all services that have been registered with DF by agent
     msg_in : multiprocessing.Queue
              queue for incoming messages of agent
@@ -96,7 +96,7 @@ class Agent():
     mqtt_on: bool
              switch for mqtt
     """
-    def __init__(self, info: schemas.AgentInfo, msg_in: multiprocessing.Queue,
+    def __init__(self, info: datamodels.AgentInfo, msg_in: multiprocessing.Queue,
                  msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
         super().__init__()
         self.id = info.id
@@ -186,7 +186,7 @@ class ACL():
         x = threading.Thread(target=self._handle_messages, daemon=True)
         x.start()
 
-    def recv_message_wait(self) -> schemas.ACLMessage:
+    def recv_message_wait(self) -> datamodels.ACLMessage:
         """
         reads one message from incoming message queue; blocks if empty
         """
@@ -207,7 +207,7 @@ class ACL():
                 break
         return msgs
 
-    def send_message(self, msg: schemas.ACLMessage):
+    def send_message(self, msg: datamodels.ACLMessage):
         """
         sends message to receiver
         """
@@ -219,7 +219,7 @@ class ACL():
             msg = self._msg_in.get()
             self._route_message(msg)
 
-    def _route_message(self, msg: schemas.ACLMessage):
+    def _route_message(self, msg: datamodels.ACLMessage):
         """
         routes the message to the correct protocol queue or to the general queue if no behavior for
         the protocol is specified
@@ -235,8 +235,8 @@ class ACL():
             q.put(msg)
 
     def new_behavior(self, protocol: int,
-                     handlePerformative: Dict[int, Callable[[schemas.ACLMessage], None]],
-                     handleDefault: Callable[[schemas.ACLMessage], None]) -> Behavior:
+                     handlePerformative: Dict[int, Callable[[datamodels.ACLMessage], None]],
+                     handleDefault: Callable[[datamodels.ACLMessage], None]) -> Behavior:
         """
         creates a new acl behavior
         """
@@ -403,7 +403,7 @@ class DF():
              ID of node agent is connected to
     masid : integer
             ID of MAS agent is located in
-    registered_svcs : dictionary of schemas.Service
+    registered_svcs : dictionary of datamodels.Service
                       all services that have been registered with DF by agent
     df_on: bool
            switch for df
@@ -420,7 +420,7 @@ class DF():
         else:
             self.df_on = False
 
-    def register_service(self, svc: schemas.Service) -> int:
+    def register_service(self, svc: datamodels.Service) -> int:
         """
         registers one service with the DF if service has not been registered before; returns svc ID
         """
@@ -506,7 +506,7 @@ class Logger():
         """
         stores one log messages
         """
-        log = schemas.LogMessage()
+        log = datamodels.LogMessage()
         log.masid = self.masid
         log.agentid = self.id
         log.logtype = logtype
@@ -520,8 +520,8 @@ class ACLBehavior(Behavior):
     reactive behavior executed when ACL message is received
     """
     def __init__(self, acl: ACL, protocol: int,
-                 handlePerformative: Dict[int, Callable[[schemas.ACLMessage], None]],
-                 handleDefault: Callable[[schemas.ACLMessage], None]):
+                 handlePerformative: Dict[int, Callable[[datamodels.ACLMessage], None]],
+                 handleDefault: Callable[[datamodels.ACLMessage], None]):
         super().__init__
         self.acl = acl
         self.protocol = protocol

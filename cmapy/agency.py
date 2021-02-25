@@ -196,6 +196,55 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         pass
 
+    def do_PUT(self):
+        """
+        handler function for PUT requests
+        """
+        path = self.path.split("/")
+        ret = ""
+        resvalid = False
+
+        if len(path) == 6:
+            if path[2] == "agency" and path[3] == "agents" and path[5] == "custom":
+                try:
+                    agentid = int(path[4])
+                    ret = self.handle_put_agent_custom(agentid)
+                    resvalid = True
+                except ValueError:
+                    pass
+
+        if resvalid:
+            ret = "Ressource Updated"
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(ret.encode())
+        else:
+            ret = "Method Not Allowed"
+            self.send_response(405)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(ret.encode())
+
+    def handle_put_agent_custom(self, agentid: int):
+        """
+        handler function for put request to /api/agency/agents/{agentid}/custom
+        """
+        content_len = int(self.headers.get('Content-Length'))
+        body = self.rfile.read(content_len)
+        custom = str(body, 'utf-8')
+        self.server.agency.lock.acquire()
+        handler = self.server.agency.local_agents.get(agentid, None)
+        if handler is None:
+            pass
+        else:
+            msg = schemas.ACLMessage()
+            msg.content = custom
+            msg.protocol = -1
+            msg.sender = -1
+            handler.msg_in.put(msg)
+        self.server.agency.lock.release()
+
     def do_DELETE(self):
         """
         handler function for DELETE requests

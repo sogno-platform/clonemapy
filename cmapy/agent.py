@@ -55,6 +55,7 @@ import cmapy.schemas as schemas
 import cmapy.df as df
 from typing import Callable, Dict
 import time
+import logging
 # from collections.abc import Callable
 
 
@@ -105,10 +106,11 @@ class Agent():
         self.subtype = info.spec.subtype
         self.custom = info.spec.custom
         self.masid = info.masid
-        self.acl = ACL(info.id, msg_in, msg_out)
+        self.acl = ACL(info.id, msg_in, msg_out, self._update_config)
         self.logger = Logger(info.masid, info.id, log_out)
         self.df = DF(info.masid, info.id, info.spec.nodeid)
         self.mqtt = MQTT()
+        self._lock = threading.Lock()
         # self.task()
 
     def loop_forever(self):
@@ -121,6 +123,12 @@ class Agent():
         """
         print("This is agent " + str(self.id))
         self.loop_forever()
+
+    def _update_config(self, custom: str):
+        self._lock.acquire()
+        self.custom = custom
+        self._lock.release()
+        logging.info("Updated config of agent " + str(self.id))
 
 
 class Behavior():
@@ -165,13 +173,15 @@ class ACL():
     _msg_in_protocol : dict
         dict mapping protocols to incoming queues which are checked by behaviors
     """
-    def __init__(self, agent_id, msg_in, msg_out):
+    def __init__(self, agent_id: int, msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue,
+                custom_callback: Callable[[str], None]):
         super().__init__()
         self._id = agent_id
         self._msg_in = msg_in
         self._msg_in_default = queue.Queue(1000)
         self._msg_out = msg_out
         self._msg_in_protocol = {}
+        self._custom_callback = custom_callback
         self._lock = threading.Lock()
         x = threading.Thread(target=self._handle_messages, daemon=True)
         x.start()
@@ -214,6 +224,8 @@ class ACL():
         routes the message to the correct protocol queue or to the general queue if no behavior for
         the protocol is specified
         """
+        if msg.protocol == -1 and msg.sender == -1:
+            self._custom_callback(msg.content)
         self._lock.acquire()
         q = self._msg_in_protocol.get(msg.protocol, None)
         self._lock.release()

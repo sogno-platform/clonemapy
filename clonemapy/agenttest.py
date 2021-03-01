@@ -41,63 +41,43 @@
 # THE SOFTWARE.
 
 """
-This module implements necessary client methods for the cloneMAP logger
+This module implements the agent class for the pingpong benchmark
 """
-import requests
+
 import json
-import logging
-import cmapy.datamodels as datamodels
-import os
-import queue
-
-Host = "http://logger:11000"
+import clonemapy.agent as agent
+import clonemapy.agency as agency
 
 
-def post_logs(masid: int, logs: list):
-    """
-    post array of log messages to logger
-    """
-    log_dicts = []
-    for i in logs:
-        log_dict = i.to_json_dict()
-        log_dicts.append(log_dict)
-    js = json.dumps(log_dicts)
-    resp = requests.post(Host+"/api/logging/"+str(masid)+"/list", data=js)
-    if resp.status_code != 201:
-        logging.error("Logger error")
+class AgentData():
+    def __init__(self):
+        self.testdata = 0
+
+    def to_json_dict(self):
+        js_dict = {'test': self.testdata}
+        return js_dict
+
+    def to_json(self):
+        js_dict = self.to_json_dict()
+        js_res = json.dumps(js_dict)
+        return js_res
+
+    def from_json_dict(self, js_dict):
+        self.testdata = js_dict.get("test", 0)
+
+    def from_json(self, js):
+        js_dict = json.loads(js)
+        self.from_json_dict(js_dict)
 
 
-def put_state(masid: int, agentid: int, state: datamodels.State):
-    """
-    update state of agent
-    """
-    js = state.to_json()
-    resp = requests.post(Host+"/api/state/"+str(masid)+"/"+str(agentid), data=js)
-    if resp.status_code != 201:
-        logging.error("Logger error")
+class Agent(agent.Agent):
+    def __init__(self, info, msg_in, msg_out, log_out):
+        super().__init__(info, msg_in, msg_out, log_out)
+        self.task()
+
+    def task(self):
+        self.loop_forever()
 
 
-def get_state(masid: int, agentid: int) -> datamodels.State:
-    """
-    request state of agent
-    """
-    state = datamodels.State()
-    resp = requests.get(Host+"/api/state/"+str(masid)+"/"+str(agentid))
-    if resp.status_code == 200:
-        state.from_json(resp.text)
-    return state
-
-
-def send_logs(masid: int, log_queue: queue.Queue):
-    """
-    wait for logs in the queue and send them to logger (to be executed in seperate thread)
-    """
-    log_on = os.environ['CLONEMAP_LOGGING']
-    while True:
-        log = log_queue.get()
-        if log_on == "ON":
-            logs = []
-            logs.append(log)
-            post_logs(masid, logs)
-        else:
-            print(log.to_json())
+if __name__ == "__main__":
+    ag = agency.Agency(Agent)

@@ -47,9 +47,9 @@ This module implements the agent class for the pingpong benchmark
 import json
 import time
 import paho.mqtt.client as mqtt
-import cmapy.agent as agent
-import cmapy.agency as agency
-import cmapy.datamodels as datamodels
+import clonemapy.agent as agent
+import clonemapy.agency as agency
+import clonemapy.datamodels as datamodels
 
 
 class CustomData():

@@ -51,8 +51,8 @@ import paho.mqtt.client as mqtt
 import multiprocessing
 import queue
 import threading
-import cmapy.datamodels as datamodels
-import cmapy.df as df
+import clonemapy.datamodels as datamodels
+import clonemapy.df as df
 from typing import Callable, Dict
 import time
 import logging

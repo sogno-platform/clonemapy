@@ -46,6 +46,6 @@ WORKDIR /agency
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY setup.py setup.py
-COPY cmapy cmapy
+COPY clonemapy clonemapy
 ENV PYTHONPATH=.
-CMD ["python", "-u", "cmapy/agenttest.py"]
+CMD ["python", "-u", "clonemapy/agenttest.py"]

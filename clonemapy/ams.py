@@ -41,72 +41,44 @@
 # THE SOFTWARE.
 
 """
-This module implements necessary client methods for the cloneMAP DF
+This module implements necessary client methods for the cloneMAP AMS
 """
 import requests
-import json
-import logging
-import cmapy.datamodels as datamodels
+import clonemapy.datamodels as datamodels
 
-Host = "http://df:12000"
+Host = "http://ams:9000"
 
 
-def post_svc(masid: int, svc: datamodels.Service) -> datamodels.Service:
+def get_agency_info_full(masid: int, imid: int, agencyid: int) -> datamodels.AgencyInfoFull:
     """
-    post service to DF
+    get configuration of agency
     """
-    js = svc.to_json()
-    resp = requests.post(Host+"/api/df/"+str(masid)+"/svc", data=js)
-    if resp.status_code == 201:
-        svc.from_json(resp.text)
-    else:
-        logging.error("DF error")
-    return svc
-
-
-def get_svc(masid: int, desc: str) -> list:
-    """
-    request services with matching description
-    """
-    svcs = []
-    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc)
+    info = datamodels.AgencyInfoFull()
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid)+"/agency/" +
+                        str(agencyid))
     if resp.status_code == 200:
-        svc_dicts = json.loads(resp.text)
-        if svc_dicts is None:
-            return svcs
-        for i in svc_dicts:
-            svc = datamodels.Service()
-            svc.from_json_dict(i)
-            svcs.append(svc)
-    else:
-        logging.error("DF error")
-    return svcs
+        info.from_json(resp.text)
+    return info
 
 
-def get_local_svc(masid: int, desc: str, nodeid: int, dist: float) -> list:
+def get_container_agency_info_full(masid: int, imid: int, agencyid: int) -> datamodels.AgencyInfoFull:
     """
-    request local services with matching description
+    get configuration of agency
     """
-    svcs = []
-    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/" +
-                        str(dist))
+    info = datamodels.AgencyInfoFull()
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/container/"+str(imid)+"/" +
+                        str(agencyid))
     if resp.status_code == 200:
-        svc_dicts = json.loads(resp.text)
-        if svc_dicts is None:
-            return svcs
-        for i in svc_dicts:
-            svc = datamodels.Service()
-            svc.from_json_dict(i)
-            svcs.append(svc)
-    else:
-        logging.error("DF error")
-    return svcs
+        info.from_json(resp.text)
+    return info
 
 
-def delete_svc(masid: int, svcid: int):
+def get_agent_address(masid: int, agentid: int) -> datamodels.Address:
     """
-    delete service with svcid
+    get address of agent
     """
-    resp = requests.delete(Host+"/api/df/"+str(masid)+"/svc/id/"+svcid)
-    if resp.status_code != 200:
-        logging.error("DF error")
+    addr = datamodels.Address()
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)+"/address")
+    if resp.status_code == 200:
+        addr.from_json(resp.text)
+    return addr

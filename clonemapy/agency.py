@@ -64,10 +64,10 @@ import queue
 import logging
 import signal
 import sys
-import cmapy.datamodels as datamodels
-import cmapy.ams as ams
-import cmapy.agent as agent
-import cmapy.logger as logger
+import clonemapy.datamodels as datamodels
+import clonemapy.ams as ams
+import clonemapy.agent as agent
+import clonemapy.logger as logger
 
 
 class AgencyHandler(server.BaseHTTPRequestHandler):

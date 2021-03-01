@@ -1,15 +1,14 @@
 stages:
-    - build
     - deploy
 
-benchmarkbuild:
-  stage: build
-  script:
-    - docker build -f docker/Dockerfile -t test .
-
-benchmarkdeploy:
+deploy:
   stage: deploy
+  image: docker:19.03.12
+  only:
+    - master
+    - develop
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.git.rwth-aachen.de
-    - docker tag test registry.git.rwth-aachen.de/acs/public/cloud/mas/clonemapy/test
-    - docker push registry.git.rwth-aachen.de/acs/public/cloud/mas/clonemapy/test
+    - docker build -f docker/Dockerfile -t clonemapy_test .
+    - docker tag test registry.git.rwth-aachen.de/acs/public/cloud/mas/clonemapy/clonemapy_test
+    - docker push registry.git.rwth-aachen.de/acs/public/cloud/mas/clonemapy/clonemapy_test

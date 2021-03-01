@@ -10,5 +10,5 @@ deploy:
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.git.rwth-aachen.de
     - docker build -f docker/Dockerfile -t clonemapy_test .
-    - docker tag test registry.git.rwth-aachen.de/acs/public/cloud/mas/clonemapy/clonemapy_test
+    - docker tag clonemapy_test registry.git.rwth-aachen.de/acs/public/cloud/mas/clonemapy/clonemapy_test
     - docker push registry.git.rwth-aachen.de/acs/public/cloud/mas/clonemapy/clonemapy_test

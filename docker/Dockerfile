@@ -40,7 +40,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-FROM python:3.5.2
+FROM python:3.6.9
 
 WORKDIR /agency
 COPY requirements.txt requirements.txt

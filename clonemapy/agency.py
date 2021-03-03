@@ -125,8 +125,8 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         handler function for GET request to /api/agency/agents/{agent-id}/status
         """
-        stat = datamodels.Status()
-        return stat.to_json()
+        stat = datamodels.Status(code=3)
+        return stat.json()
 
     def do_POST(self):
         """
@@ -166,9 +166,8 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         """
         content_len = int(self.headers.get('Content-Length'))
         body = self.rfile.read(content_len)
-        agentinfo_dict = json.loads(str(body, 'utf-8'))
-        agentinfo = datamodels.AgentInfo()
-        agentinfo.from_json_dict(agentinfo_dict)
+        # agentinfo_dict = json.loads(str(body, 'utf-8'))
+        agentinfo = datamodels.AgentInfo.parse_raw(body, encoding='utf8')
         self.server.agency.create_agent(agentinfo)
 
     def handle_post_msgs(self):
@@ -180,8 +179,8 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         msg_dicts = json.loads(str(body, 'utf-8'))
         msgs = []
         for i in msg_dicts:
-            msg = datamodels.ACLMessage()
-            msg.from_json_dict(i)
+            msg = datamodels.ACLMessage.parse_obj(i)
+            # msg.from_json_dict(i)
             msgs.append(msg)
         for i in msgs:
             self.server.agency.lock.acquire()
@@ -208,7 +207,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             if path[2] == "agency" and path[3] == "agents" and path[5] == "custom":
                 try:
                     agentid = int(path[4])
-                    ret = self.handle_put_agent_custom(agentid)
+                    self.handle_put_agent_custom(agentid)
                     resvalid = True
                 except ValueError:
                     pass
@@ -335,7 +334,6 @@ class Agency:
         super().__init__()
         signal.signal(signal.SIGINT, self.terminate)
         signal.signal(signal.SIGTERM, self.terminate)
-        self.info = datamodels.AgencyInfo()
         self.ag_class = ag_class
         self.local_agents = {}
         self.msg_out = multiprocessing.Queue(1000)
@@ -361,27 +359,30 @@ class Agency:
         self.hostname = hostname
         if len(hostname) < 4:
             pass
-        self.info.masid = int(hostname[1])
-        self.info.imagegroupid = int(hostname[3])
-        self.info.id = int(hostname[5])
-        self.info.name = temp + ".mas" + hostname[1] + "agencies"
+        masid = int(hostname[1])
+        imid = int(hostname[3])
+        agencyid = int(hostname[5])
+        name = temp + ".mas" + hostname[1] + "agencies"
+        self.info = datamodels.AgencyInfo(masid=masid, imid=imid, id=agencyid, name=name)
 
         x = threading.Thread(target=self.listen, daemon=True)
         x.start()
-        y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,), daemon=True)
+        y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,),
+                             daemon=True)
         y.start()
         self.start_agents()
-        time.sleep(5)
+        time.sleep(2)
         self.send_msg()
 
     def start_agents(self):
         """
         Requests the agent configuration from the ams and starts the agents
         """
-        conf = ams.get_agency_info_full(self.info.masid, self.info.imagegroupid, self.info.id)
+        conf = ams.get_agency_info_full(self.info.masid, self.info.imid, self.info.id)
         if conf.name != "":
-            self.info.id = conf.id
+            # self.info.id = conf.id
             self.info.logger = conf.logger
+            self.info.agents = conf.agents
             logging.info("Starting agents")
             for i in conf.agents:
                 self.create_agent(i)
@@ -418,6 +419,7 @@ class Agency:
         while True:
             msg = self.msg_out.get()
             recv = msg.receiver
+            msg.agencys = self.info.name
             self.lock.acquire()
             local_agent = self.local_agents.get(recv, None)
             recv_agency = self.remote_agents.get(recv, None)
@@ -469,17 +471,18 @@ def remote_agency_sender(address: str, out: queue.Queue):
     """
     while True:
         msg = out.get()
-        msg_dict = msg.to_json_dict()
+        msg.agencyr = address
+        msg_dict = json.loads(msg.json())
         msg_dicts = []
         msg_dicts.append(msg_dict)
         js = json.dumps(msg_dicts)
         resp = requests.post("http://"+address+":10000/api/agency/msgs", data=js)
         if resp.status_code != 201:
             pass
-        print("sent msg")
 
 
-def agent_starter(agent_class: agent.Agent, info: datamodels.AgentInfo, msg_in: multiprocessing.Queue,
+def agent_starter(agent_class: agent.Agent, info: datamodels.AgentInfo,
+                  msg_in: multiprocessing.Queue,
                   msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
     """
     starting agent; this function is to be called in a separate process

@@ -174,7 +174,7 @@ class ACL():
         dict mapping protocols to incoming queues which are checked by behaviors
     """
     def __init__(self, agent_id: int, msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue,
-                custom_callback: Callable[[str], None]):
+                 custom_callback: Callable[[str], None]):
         super().__init__()
         self._id = agent_id
         self._msg_in = msg_in
@@ -224,10 +224,10 @@ class ACL():
         routes the message to the correct protocol queue or to the general queue if no behavior for
         the protocol is specified
         """
-        if msg.protocol == -1 and msg.sender == -1:
+        if msg.prot == -1 and msg.sender == -1:
             self._custom_callback(msg.content)
         self._lock.acquire()
-        q = self._msg_in_protocol.get(msg.protocol, None)
+        q = self._msg_in_protocol.get(msg.prot, None)
         self._lock.release()
         if q is None:
             self._msg_in_default.put(msg)
@@ -431,8 +431,8 @@ class DF():
         temp = self.registered_svcs.get(svc.desc, None)
         if temp is not None:
             return -1
-        svc.created = datetime.now()
-        svc.changed = datetime.now()
+        svc.createdat = datetime.now()
+        svc.changedat = datetime.now()
         svc.masid = self.masid
         svc.agentid = self.id
         svc.nodeid = self.nodeid
@@ -506,12 +506,8 @@ class Logger():
         """
         stores one log messages
         """
-        log = datamodels.LogMessage()
-        log.masid = self.masid
-        log.agentid = self.id
-        log.topic = topic
-        log.message = msg
-        log.add_data = data
+        log = datamodels.LogMessage(masid=self.masid, agentid=self.id, topic=topic, msg=msg,
+                                    data=data)
         self.log_out.put(log)
 
 

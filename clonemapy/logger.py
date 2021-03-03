@@ -49,17 +49,18 @@ import logging
 import clonemapy.datamodels as datamodels
 import os
 import queue
+from typing import List
 
 Host = "http://logger:11000"
 
 
-def post_logs(masid: int, logs: list):
+def post_logs(masid: int, logs: List[datamodels.LogMessage]):
     """
     post array of log messages to logger
     """
     log_dicts = []
     for i in logs:
-        log_dict = i.to_json_dict()
+        log_dict = json.loads(i.json())
         log_dicts.append(log_dict)
     js = json.dumps(log_dicts)
     resp = requests.post(Host+"/api/logging/"+str(masid)+"/list", data=js)
@@ -71,7 +72,7 @@ def put_state(masid: int, agentid: int, state: datamodels.State):
     """
     update state of agent
     """
-    js = state.to_json()
+    js = state.json()
     resp = requests.post(Host+"/api/state/"+str(masid)+"/"+str(agentid), data=js)
     if resp.status_code != 201:
         logging.error("Logger error")
@@ -81,11 +82,13 @@ def get_state(masid: int, agentid: int) -> datamodels.State:
     """
     request state of agent
     """
-    state = datamodels.State()
     resp = requests.get(Host+"/api/state/"+str(masid)+"/"+str(agentid))
     if resp.status_code == 200:
-        state.from_json(resp.text)
-    return state
+        state = datamodels.State.parse_raw(resp.text)
+        # state.from_json(resp.text)
+        return state
+    else:
+        return None
 
 
 def send_logs(masid: int, log_queue: queue.Queue):
@@ -100,4 +103,4 @@ def send_logs(masid: int, log_queue: queue.Queue):
             logs.append(log)
             post_logs(masid, logs)
         else:
-            print(log.to_json())
+            print(log.json())

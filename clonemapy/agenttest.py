@@ -47,6 +47,8 @@ This module implements the agent class for the pingpong benchmark
 import json
 import clonemapy.agent as agent
 import clonemapy.agency as agency
+import clonemapy.datamodels as datamodels
+import time
 
 
 class AgentData():
@@ -73,9 +75,19 @@ class AgentData():
 class Agent(agent.Agent):
     def __init__(self, info, msg_in, msg_out, log_out):
         super().__init__(info, msg_in, msg_out, log_out)
-        self.task()
 
     def task(self):
+        time.sleep(5)
+        print("Hello")
+        recv = (self.id+1) % 2
+        msg = datamodels.ACLMessage(receiver=recv, content="msg from "+str(self.id))
+        self.acl.send_message(msg)
+        self.logger.new_log("app", "agent"+str(self.id), "")
+        svc = datamodels.Service(desc="svc by " + str(self.id))
+        svcid = self.df.register_service(svc)
+        print(svcid)
+        msg = self.acl.recv_message_wait()
+        print(msg)
         self.loop_forever()
 
 

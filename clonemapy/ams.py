@@ -53,32 +53,39 @@ def get_agency_info_full(masid: int, imid: int, agencyid: int) -> datamodels.Age
     """
     get configuration of agency
     """
-    info = datamodels.AgencyInfoFull()
     resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid)+"/agency/" +
                         str(agencyid))
     if resp.status_code == 200:
-        info.from_json(resp.text)
-    return info
+        info = datamodels.AgencyInfoFull.parse_raw(resp.text)
+        # info.from_json(resp.text)
+        return info
+    else:
+        return None
 
 
-def get_container_agency_info_full(masid: int, imid: int, agencyid: int) -> datamodels.AgencyInfoFull:
+def get_container_agency_info_full(masid: int, imid: int,
+                                   agencyid: int) -> datamodels.AgencyInfoFull:
     """
     get configuration of agency
     """
-    info = datamodels.AgencyInfoFull()
     resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/container/"+str(imid)+"/" +
                         str(agencyid))
     if resp.status_code == 200:
-        info.from_json(resp.text)
-    return info
+        info = datamodels.AgencyInfoFull.parse_raw(resp.text)
+        # info.from_json(resp.text)
+        return info
+    else:
+        return None
 
 
 def get_agent_address(masid: int, agentid: int) -> datamodels.Address:
     """
     get address of agent
     """
-    addr = datamodels.Address()
     resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)+"/address")
     if resp.status_code == 200:
-        addr.from_json(resp.text)
-    return addr
+        addr = datamodels.Address.parse_raw(resp.text)
+        return addr
+        # addr.from_json(resp.text)
+    else:
+        return None

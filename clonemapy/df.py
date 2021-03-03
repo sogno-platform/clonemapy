@@ -55,10 +55,10 @@ def post_svc(masid: int, svc: datamodels.Service) -> datamodels.Service:
     """
     post service to DF
     """
-    js = svc.to_json()
+    js = svc.json()
     resp = requests.post(Host+"/api/df/"+str(masid)+"/svc", data=js)
     if resp.status_code == 201:
-        svc.from_json(resp.text)
+        svc = datamodels.Service.parse_raw(resp.text)
     else:
         logging.error("DF error")
     return svc
@@ -75,8 +75,8 @@ def get_svc(masid: int, desc: str) -> list:
         if svc_dicts is None:
             return svcs
         for i in svc_dicts:
-            svc = datamodels.Service()
-            svc.from_json_dict(i)
+            svc = datamodels.Service.parse_obj(i)
+            # svc.from_json_dict(i)
             svcs.append(svc)
     else:
         logging.error("DF error")
@@ -95,8 +95,8 @@ def get_local_svc(masid: int, desc: str, nodeid: int, dist: float) -> list:
         if svc_dicts is None:
             return svcs
         for i in svc_dicts:
-            svc = datamodels.Service()
-            svc.from_json_dict(i)
+            svc = datamodels.Service.parse_raw(i)
+            # svc.from_json_dict(i)
             svcs.append(svc)
     else:
         logging.error("DF error")

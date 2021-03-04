@@ -44,6 +44,8 @@
 This module implements necessary client methods for the cloneMAP AMS
 """
 import requests
+import logging
+from typing import List
 import clonemapy.datamodels as datamodels
 
 Host = "http://ams:9000"
@@ -89,3 +91,35 @@ def get_agent_address(masid: int, agentid: int) -> datamodels.Address:
         # addr.from_json(resp.text)
     else:
         return None
+
+
+def post_mas(mas: datamodels.MASSpec):
+    """
+    post mas spec to start a mas
+    """
+    js = mas.json()
+    resp = requests.post(Host+"/api/clonemap/mas", data=js)
+    if resp.status_code != 201:
+        logging.error("AMS error")
+
+
+def get_mas(masid: int) -> datamodels.MASInfo:
+    """
+    get info of mas
+    """
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid))
+    if resp.status_code == 200:
+        mas = datamodels.MASInfo.parse_raw(resp.text)
+        return mas
+    else:
+        return None
+
+
+def post_agents(masid: int, agents: List[datamodels.ImageGroupSpec]):
+    """
+    post agents
+    """
+    js = agents.json()
+    resp = requests.post(Host+"/api/clonemap/mas/"+str(masid)+"/agents", data=js)
+    if resp.status_code != 201:
+        logging.error("AMS error")

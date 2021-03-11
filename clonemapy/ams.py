@@ -45,52 +45,40 @@ This module implements necessary client methods for the cloneMAP AMS
 """
 import requests
 import logging
+import json
 from typing import List
 import clonemapy.datamodels as datamodels
 
 Host = "http://ams:9000"
 
 
-def get_agency_info_full(masid: int, imid: int, agencyid: int) -> datamodels.AgencyInfoFull:
-    """
-    get configuration of agency
-    """
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid)+"/agency/" +
-                        str(agencyid))
+def alive() -> bool:
+    resp = requests.get(Host+"/api/alive")
     if resp.status_code == 200:
-        info = datamodels.AgencyInfoFull.parse_raw(resp.text)
-        # info.from_json(resp.text)
-        return info
-    else:
-        return None
+        return True
+    return False
 
 
-def get_container_agency_info_full(masid: int, imid: int,
-                                   agencyid: int) -> datamodels.AgencyInfoFull:
-    """
-    get configuration of agency
-    """
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/container/"+str(imid)+"/" +
-                        str(agencyid))
+def get_clonemap() -> datamodels.CloneMAP:
+    resp = requests.get(Host+"/api/clonemap")
     if resp.status_code == 200:
-        info = datamodels.AgencyInfoFull.parse_raw(resp.text)
-        # info.from_json(resp.text)
-        return info
-    else:
-        return None
+        return datamodels.CloneMAP.parse_raw(resp.text)
+    logging.error("AMS error")
+    return None
 
 
-def get_agent_address(masid: int, agentid: int) -> datamodels.Address:
-    """
-    get address of agent
-    """
-    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)+"/address")
+def get_mass() -> List[datamodels.MASInfoShort]:
+    resp = requests.get(Host+"/api/clonemap/mas")
     if resp.status_code == 200:
-        addr = datamodels.Address.parse_raw(resp.text)
-        return addr
-        # addr.from_json(resp.text)
-    else:
-        return None
+        mass = []
+        mas_dicts = json.loads(resp.text)
+        if mas_dicts is None:
+            return mass
+        for i in mas_dicts:
+            mass.append(datamodels.MASInfoShort.parse_obj(i))
+        return mass
+    logging.error("AMS error")
+    return None
 
 
 def post_mas(mas: datamodels.MASSpec):
@@ -109,10 +97,26 @@ def get_mas(masid: int) -> datamodels.MASInfo:
     """
     resp = requests.get(Host+"/api/clonemap/mas/"+str(masid))
     if resp.status_code == 200:
-        mas = datamodels.MASInfo.parse_raw(resp.text)
-        return mas
-    else:
-        return None
+        return datamodels.MASInfo.parse_raw(resp.text)
+    logging.error("AMS error")
+    return None
+
+
+def delete_mas(masid: int):
+    resp = requests.delete(Host+"/api/clonemap/mas/"+str(masid))
+    if resp.status_code != 201:
+        logging.error("AMS error")
+
+
+def get_agents(masid: int) -> datamodels.Agents:
+    """
+    get agents in mas
+    """
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents")
+    if resp.status_code == 200:
+        return datamodels.Agents.parse_raw(resp.text)
+    logging.error("AMS error")
+    return None
 
 
 def post_agents(masid: int, agents: List[datamodels.ImageGroupSpec]):
@@ -123,3 +127,54 @@ def post_agents(masid: int, agents: List[datamodels.ImageGroupSpec]):
     resp = requests.post(Host+"/api/clonemap/mas/"+str(masid)+"/agents", data=js)
     if resp.status_code != 201:
         logging.error("AMS error")
+
+
+def get_agent(masid: int, agentid: int) -> datamodels.AgentInfo:
+    """
+    get agents in mas
+    """
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid))
+    if resp.status_code == 200:
+        return datamodels.AgentInfo.parse_raw(resp.text)
+    logging.error("AMS error")
+    return None
+
+
+def get_agent_address(masid: int, agentid: int) -> datamodels.Address:
+    """
+    get address of agent
+    """
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)+"/address")
+    if resp.status_code == 200:
+        return datamodels.Address.parse_raw(resp.text)
+    logging.error("AMS error")
+    return None
+
+
+def delete_agent(masid: int, agentid: int):
+    resp = requests.delete(Host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid))
+    if resp.status_code != 201:
+        logging.error("AMS error")
+
+
+def get_agencies(masid: int) -> datamodels.Agencies:
+    """
+    get agencies in mas
+    """
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/agencies")
+    if resp.status_code == 200:
+        return datamodels.Agencies.parse_raw(resp.text)
+    logging.error("AMS error")
+    return None
+
+
+def get_agency_info_full(masid: int, imid: int, agencyid: int) -> datamodels.AgencyInfoFull:
+    """
+    get configuration of agency
+    """
+    resp = requests.get(Host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid)+"/agency/" +
+                        str(agencyid))
+    if resp.status_code == 200:
+        return datamodels.AgencyInfoFull.parse_raw(resp.text)
+    logging.error("AMS error")
+    return None

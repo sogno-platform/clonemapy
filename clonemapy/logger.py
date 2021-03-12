@@ -54,6 +54,13 @@ from typing import List
 Host = "http://logger:11000"
 
 
+def alive() -> bool:
+    resp = requests.get(Host+"/api/alive")
+    if resp.status_code == 200:
+        return True
+    return False
+
+
 def post_logs(masid: int, logs: List[datamodels.LogMessage]):
     """
     post array of log messages to logger
@@ -68,6 +75,22 @@ def post_logs(masid: int, logs: List[datamodels.LogMessage]):
         logging.error("Logger error")
 
 
+def get_latest_logs(masid: int, agentid: int, topic: str, num: int) -> List[datamodels.LogMessage]:
+    logs = []
+    resp = requests.get(Host+"/api/logging/"+str(masid)+"/"+str(agentid)+"/"+topic+"/latest/" +
+                        str(num))
+    if resp.status_code == 200:
+        log_dicts = json.loads(resp.text)
+        if log_dicts is None:
+            return logs
+        for i in log_dicts:
+            log = datamodels.LogMessage.parse_obj(i)
+            logs.append(log)
+    else:
+        logging.error("DF error")
+    return logs
+
+
 def put_state(masid: int, agentid: int, state: datamodels.State):
     """
     update state of agent
@@ -78,17 +101,25 @@ def put_state(masid: int, agentid: int, state: datamodels.State):
         logging.error("Logger error")
 
 
+def update_states(masid: int, states: List[datamodels.State]):
+    state_dicts = []
+    for i in states:
+        state_dict = json.loads(i.json())
+        state_dicts.append(state_dict)
+    js = json.dumps(state_dicts)
+    resp = requests.post(Host+"/api/state/"+str(masid)+"/list", data=js)
+    if resp.status_code != 201:
+        logging.error("Logger error")
+
+
 def get_state(masid: int, agentid: int) -> datamodels.State:
     """
     request state of agent
     """
     resp = requests.get(Host+"/api/state/"+str(masid)+"/"+str(agentid))
     if resp.status_code == 200:
-        state = datamodels.State.parse_raw(resp.text)
-        # state.from_json(resp.text)
-        return state
-    else:
-        return None
+        return datamodels.State.parse_raw(resp.text)
+    return None
 
 
 def send_logs(masid: int, log_queue: queue.Queue):

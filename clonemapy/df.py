@@ -51,6 +51,13 @@ import clonemapy.datamodels as datamodels
 Host = "http://df:12000"
 
 
+def alive() -> bool:
+    resp = requests.get(Host+"/api/alive")
+    if resp.status_code == 200:
+        return True
+    return False
+
+
 def post_svc(masid: int, svc: datamodels.Service) -> datamodels.Service:
     """
     post service to DF
@@ -110,3 +117,21 @@ def delete_svc(masid: int, svcid: int):
     resp = requests.delete(Host+"/api/df/"+str(masid)+"/svc/id/"+svcid)
     if resp.status_code != 200:
         logging.error("DF error")
+
+
+def post_graph(masid: int, gr: datamodels.Graph):
+    """
+    post graph to DF
+    """
+    js = gr.json()
+    resp = requests.post(Host+"/api/df/"+str(masid)+"/graph", data=js)
+    if resp.status_code != 201:
+        logging.error("DF error")
+
+
+def get_graph(masid: int) -> datamodels.Graph:
+    resp = requests.get(Host+"/api/df/"+str(masid)+"/graph")
+    if resp.status_code == 200:
+        return datamodels.Graph.parse_raw(resp.text)
+    logging.error("DF error")
+    return None

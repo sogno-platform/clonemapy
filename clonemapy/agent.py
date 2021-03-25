@@ -59,6 +59,33 @@ import logging
 # from collections.abc import Callable
 
 
+class Behavior():
+    """
+    abstract base class for agent behaviors
+    """
+    def __init__(self):
+        super().__init__()
+        pass
+
+    def start(self):
+        """
+        starts the behavior
+        """
+        pass
+
+    def stop(self):
+        """
+        stops the behavior
+        """
+        pass
+
+    def _task(self):
+        """
+        behavior task
+        """
+        pass
+
+
 class Agent():
     """
     Super class of agents
@@ -105,6 +132,7 @@ class Agent():
         self.type = info.spec.type
         self.subtype = info.spec.subtype
         self.custom = info.spec.custom
+        self._customQueue = None
         self.masid = info.masid
         self.acl = ACL(info.id, msg_in, msg_out, self._update_config)
         self.logger = Logger(info.masid, info.id, log_out)
@@ -124,38 +152,60 @@ class Agent():
         print("This is agent " + str(self.id))
         self.loop_forever()
 
+    def new_acl_protocol_behavior(self, protocol: int,
+                                  handle_performative: Dict[int, Callable[[datamodels.ACLMessage],
+                                                                          None]],
+                                  handle_default: Callable[[datamodels.ACLMessage],
+                                                           None]) -> Behavior:
+        """
+        creates a new acl behavior
+        """
+        beh = ACLBehavior(self.acl, protocol, handle_performative, handle_default)
+        return beh
+
+    def new_mqtt_topic_behavior(self, topic: str, handle: Callable[[mqtt.MQTTMessage],
+                                                                   None]) -> Behavior:
+        """
+        creates a new mqtt behavior
+        """
+        beh = MQTTBehavior(self.mqtt, topic, handle)
+        return beh
+
+    def new_mqtt_default_behavior(self, handle: Callable[[mqtt.MQTTMessage], None]) -> Behavior:
+        """
+        creates a new mqtt default behavior
+        """
+        beh = MQTTBehavior(self.mqtt, "#", handle)
+        return beh
+
+    def new_custom_update_behavior(self, handle: Callable[[str], None]) -> Behavior:
+        """
+        creates a new custom config update behavior
+        """
+        beh = CustomUpdateBehavior(self, handle)
+        return beh
+
     def _update_config(self, custom: str):
         self._lock.acquire()
         self.custom = custom
+        if self._customQueue is not None:
+            self._customQueue.put(custom)
         self._lock.release()
         logging.info("Updated config of agent " + str(self.id))
 
+    def _register_custom_update_behavior(self) -> queue.Queue:
+        if self._customQueue is not None:
+            return None
+        q = queue.Queue(10)
+        self._lock.acquire()
+        self._customQueue = q
+        self._lock.release()
+        return q
 
-class Behavior():
-    """
-    abstract base class for agent behaviors
-    """
-    def __init__(self):
-        super().__init__()
-        pass
-
-    def start(self):
-        """
-        starts the behavior
-        """
-        pass
-
-    def stop(self):
-        """
-        stops the behavior
-        """
-        pass
-
-    def _task(self):
-        """
-        behavior task
-        """
-        pass
+    def _deregister_custom_update_behavior(self):
+        self._lock.acquire()
+        self._customQueue = None
+        self._lock.release()
 
 
 class ACL():
@@ -226,13 +276,14 @@ class ACL():
         """
         if msg.prot == -1 and msg.sender == -1:
             self._custom_callback(msg.content)
-        self._lock.acquire()
-        q = self._msg_in_protocol.get(msg.prot, None)
-        self._lock.release()
-        if q is None:
-            self._msg_in_default.put(msg)
         else:
-            q.put(msg)
+            self._lock.acquire()
+            q = self._msg_in_protocol.get(msg.prot, None)
+            self._lock.release()
+            if q is None:
+                self._msg_in_default.put(msg)
+            else:
+                q.put(msg)
 
     def new_behavior(self, protocol: int,
                      handlePerformative: Dict[int, Callable[[datamodels.ACLMessage], None]],
@@ -410,34 +461,34 @@ class DF():
     """
     def __init__(self, masid, agentid, nodeid):
         super().__init__()
-        self.id = agentid
-        self.nodeid = nodeid
-        self.masid = masid
-        self.registered_svcs = {}
+        self._id = agentid
+        self._nodeid = nodeid
+        self._masid = masid
+        self._registered_svcs = {}
         df_on = os.environ['CLONEMAP_DF']
         if df_on == "ON":
-            self.df_on = True
+            self._df_on = True
         else:
-            self.df_on = False
+            self._df_on = False
 
     def register_service(self, svc: datamodels.Service) -> int:
         """
         registers one service with the DF if service has not been registered before; returns svc ID
         """
-        if not self.df_on:
+        if not self._df_on:
             return -1
         if svc.desc == "":
             return -1
-        temp = self.registered_svcs.get(svc.desc, None)
+        temp = self._registered_svcs.get(svc.desc, None)
         if temp is not None:
             return -1
         svc.createdat = datetime.now()
         svc.changedat = datetime.now()
-        svc.masid = self.masid
-        svc.agentid = self.id
-        svc.nodeid = self.nodeid
-        svc = df.post_svc(self.masid, svc)
-        self.registered_svcs[svc.desc] = svc
+        svc.masid = self._masid
+        svc.agentid = self._id
+        svc.nodeid = self._nodeid
+        svc = df.post_svc(self._masid, svc)
+        self._registered_svcs[svc.desc] = svc
         return svc.id
 
     def search_for_service(self, desc: str) -> list:
@@ -445,11 +496,11 @@ class DF():
         searches for a service and returns all matching services within MAS
         """
         svcs = []
-        if not self.df_on:
+        if not self._df_on:
             return svcs
-        temp = df.get_svc(self.masid, desc)
+        temp = df.get_svc(self._masid, desc)
         for i in temp:
-            if i.agentid != self.id:
+            if i.agentid != self._id:
                 svcs.append(i)
         return svcs
 
@@ -458,11 +509,11 @@ class DF():
         searches for a service and returns all matching services within specified distance
         """
         svcs = []
-        if not self.df_on:
+        if not self._df_on:
             return svcs
-        temp = df.get_local_svc(self.masid, desc, self.nodeid, dist)
+        temp = df.get_local_svc(self._masid, desc, self._nodeid, dist)
         for i in temp:
-            if i.agentid != self.id:
+            if i.agentid != self._id:
                 svcs.append(i)
         return svcs
 
@@ -470,17 +521,17 @@ class DF():
         """
         deregisters the service with svcid
         """
-        if not self.df_on:
+        if not self._df_on:
             return
         desc = ""
-        for temp in self.registered_svcs:
-            if self.registered_svcs[temp].id == svcid:
+        for temp in self._registered_svcs:
+            if self._registered_svcs[temp].id == svcid:
                 desc = temp
                 break
         if desc == "":
             return
-        del self.registered_svcs[desc]
-        df.delete_svc(self.masid, svcid)
+        del self._registered_svcs[desc]
+        df.delete_svc(self._masid, svcid)
 
 
 class Logger():
@@ -498,17 +549,17 @@ class Logger():
     """
     def __init__(self, masid: int, agentid: int, log_out):
         super().__init__()
-        self.id = agentid
-        self.masid = masid
-        self.log_out = log_out
+        self._id = agentid
+        self._masid = masid
+        self._log_out = log_out
 
     def new_log(self, topic: str, msg: str, data: str):
         """
         stores one log messages
         """
-        log = datamodels.LogMessage(masid=self.masid, agentid=self.id, topic=topic, msg=msg,
+        log = datamodels.LogMessage(masid=self._masid, agentid=self._id, topic=topic, msg=msg,
                                     data=data)
-        self.log_out.put(log)
+        self._log_out.put(log)
 
 
 class ACLBehavior(Behavior):
@@ -519,16 +570,16 @@ class ACLBehavior(Behavior):
                  handlePerformative: Dict[int, Callable[[datamodels.ACLMessage], None]],
                  handleDefault: Callable[[datamodels.ACLMessage], None]):
         super().__init__
-        self.acl = acl
-        self.protocol = protocol
-        self.handlePerformative = handlePerformative
-        self.handleDefault = handleDefault
+        self._acl = acl
+        self._protocol = protocol
+        self._handlePerformative = handlePerformative
+        self._handleDefault = handleDefault
 
     def start(self):
         """
         starts the behavior
         """
-        self.q = self.acl._register_behavior(self.protocol)
+        self._queue = self._acl._register_behavior(self._protocol)
         x = threading.Thread(target=self._task, daemon=True)
         x.start()
 
@@ -543,8 +594,8 @@ class ACLBehavior(Behavior):
         behavior task
         """
         while True:
-            msg = self.q.get()
-            self.handleDefault(msg)
+            msg = self._queue.get()
+            self._handleDefault(msg)
 
 
 class MQTTBehavior(Behavior):
@@ -553,15 +604,15 @@ class MQTTBehavior(Behavior):
     """
     def __init__(self, mqtt: MQTT, topic: str, handle: Callable[[mqtt.MQTTMessage], None]):
         super().__init__
-        self.mqtt = mqtt
-        self.topic = topic
-        self.handle = handle
+        self._mqtt = mqtt
+        self._topic = topic
+        self._handle = handle
 
     def start(self):
         """
         starts the behavior
         """
-        self.q = self.mqtt._register_behavior(self.topic)
+        self._queue = self._mqtt._register_behavior(self._topic)
         x = threading.Thread(target=self._task, daemon=True)
         x.start()
 
@@ -576,8 +627,8 @@ class MQTTBehavior(Behavior):
         behavior task
         """
         while True:
-            msg = self.q.get()
-            self.handle(msg)
+            msg = self._queue.get()
+            self._handle(msg)
 
 
 class PeriodicBehavior(Behavior):
@@ -604,3 +655,35 @@ class PeriodicBehavior(Behavior):
         behavior task
         """
         pass
+
+
+class CustomUpdateBehavior(Behavior):
+    """
+    behavior to be executed whenever the agent custom configuration changes
+    """
+    def __init__(self, agent: Agent, handle: Callable[[str], None]):
+        super().__init__
+        self._agent = agent
+        self._handle = handle
+
+    def start(self):
+        """
+        starts the behavior
+        """
+        self._queue = self._agent._register_custom_update_behavior()
+        x = threading.Thread(target=self._task, daemon=True)
+        x.start()
+
+    def stop(self):
+        """
+        stops the behavior
+        """
+        pass
+
+    def _task(self):
+        """
+        behavior task
+        """
+        while True:
+            custom = self._queue.get()
+            self._handle(custom)

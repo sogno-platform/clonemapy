@@ -77,6 +77,8 @@ class Agent(agent.Agent):
         super().__init__(info, msg_in, msg_out, log_out)
 
     def task(self):
+        beh = self.new_custom_update_behavior(self.custom_handler)
+        beh.start()
         time.sleep(5)
         print("Hello")
         recv = (self.id+1) % 2
@@ -89,6 +91,9 @@ class Agent(agent.Agent):
         msg = self.acl.recv_message_wait()
         print(msg)
         self.loop_forever()
+
+    def custom_handler(self, custom: str):
+        print(custom)
 
 
 if __name__ == "__main__":

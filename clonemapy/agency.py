@@ -84,7 +84,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
-        # self.log_message()
+        logging.info("Received Request: GET " + self.path)
 
         if len(path) == 3:
             if path[2] == "agency":
@@ -110,6 +110,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
+            logging.error(ret)
 
     def handle_get_agency(self):
         """
@@ -135,6 +136,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
+        logging.info("Received Request: POST " + self.path)
 
         if len(path) == 4:
             if path[2] == "agency" and path[3] == "agents":
@@ -159,6 +161,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
+            logging.error(ret)
 
     def handle_post_agent(self):
         """
@@ -202,6 +205,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
+        logging.info("Received Request: PUT " + self.path)
 
         if len(path) == 6:
             if path[2] == "agency" and path[3] == "agents" and path[5] == "custom":
@@ -224,6 +228,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
+            logging.error(ret)
 
     def handle_put_agent_custom(self, agentid: int):
         """
@@ -237,10 +242,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         if handler is None:
             pass
         else:
-            msg = datamodels.ACLMessage()
-            msg.content = custom
-            msg.protocol = -1
-            msg.sender = -1
+            msg = datamodels.ACLMessage(receiver=agentid, sender=-1, prot=-1, content=custom)
             handler.msg_in.put(msg)
         self.server.agency.lock.release()
 
@@ -251,6 +253,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
+        logging.info("Received Request: DELETE " + self.path)
 
         if len(path) == 5:
             if path[2] == "agency" and path[3] == "agents":
@@ -273,6 +276,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
+            logging.error(ret)
 
     def handle_delete_agent(self, agentid: int):
         """

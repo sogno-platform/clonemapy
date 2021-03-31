@@ -79,6 +79,15 @@ def get_mass(host: str) -> List[datamodels.MASInfoShort]:
     return None
 
 
+def get_mass_by_name(host: str, mas_name: str) -> List[int]:
+    resp = requests.get("http://"+host+"/api/clonemap/mas/name/"+mas_name)
+    if resp.status_code == 200:
+        mass = json.loads(resp.text)
+        return mass
+    logging.error("AMS error")
+    return None
+
+
 def post_mas(host: str, mas: datamodels.MASSpec):
     """
     post mas spec to start a mas
@@ -113,6 +122,18 @@ def get_agents(host: str, masid: int) -> datamodels.Agents:
     resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents")
     if resp.status_code == 200:
         return datamodels.Agents.parse_raw(resp.text)
+    logging.error("AMS error")
+    return None
+
+
+def get_agents_by_name(host: str, masid: int, agent_name) -> List[int]:
+    """
+    get agents in mas by name
+    """
+    resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/name/"+agent_name)
+    if resp.status_code == 200:
+        agents = json.loads(resp.text)
+        return agents
     logging.error("AMS error")
     return None
 
@@ -160,6 +181,13 @@ def delete_agent(host: str, masid: int, agentid: int):
         logging.error("AMS error")
 
 
+def put_agent_custom(host: str, masid: int, agentid: int, custom: str):
+    resp = requests.put("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid) +
+                        "/custom", data=custom)
+    if resp.status_code != 200:
+        logging.error("AMS error")
+
+
 def get_agencies(host: str, masid: int) -> datamodels.Agencies:
     """
     get agencies in mas
@@ -182,3 +210,30 @@ def get_agency_info_full(host: str, masid: int, imid: int,
         return datamodels.AgencyInfoFull.parse_raw(resp.text)
     logging.error("AMS error")
     return None
+
+
+def new_agent(host: str, image: str, secret: str, masid: int, name: str, custom: str):
+    im_group_config = datamodels.ImageGroupConfig(image=image, secret=secret)
+    agent_spec = datamodels.AgentSpec(nodeid=0, name=name, custom=custom)
+    agent_specs = [agent_spec]
+    im_group_spec = datamodels.ImageGroupSpec(config=im_group_config, agents=agent_specs)
+    im_group_specs = [im_group_spec]
+    post_agents(host, masid, im_group_specs)
+
+
+def update_or_create_agent(host: str, image: str, secret: str, masid: int, name: str, custom: str):
+    agents = get_agents_by_name(host, masid, name)
+    if agents is None:
+        new_agent(host, image, secret, masid, name, custom)
+        return
+    if len(agents) > 1:
+        logging.error("agent is not unique")
+        return
+    agentid = agents[0]
+    put_agent_custom(host, masid, agentid, custom)
+
+
+if __name__ == "__main__":
+    update_or_create_agent("localhost:30009", "agency", "", 0, "superagent2", "superconfig2")
+    agents = get_agents("localhost:30009", 0)
+    print(agents)

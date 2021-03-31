@@ -382,7 +382,7 @@ class Agency:
         """
         Requests the agent configuration from the ams and starts the agents
         """
-        conf = ams.get_agency_info_full(self.info.masid, self.info.imid, self.info.id)
+        conf = ams.get_agency_info_full("ams:9000", self.info.masid, self.info.imid, self.info.id)
         if conf.name != "":
             # self.info.id = conf.id
             self.info.logger = conf.logger
@@ -437,7 +437,7 @@ class Agency:
                 self.lock.acquire()
                 masid = self.info.masid
                 self.lock.release()
-                addr = ams.get_agent_address(masid, recv)
+                addr = ams.get_agent_address("ams:9000", masid, recv)
                 if addr.agency == "":
                     logging.error("Invalid agent address")
                     continue

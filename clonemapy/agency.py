@@ -119,7 +119,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         self.server.agency.lock.acquire()
         info = self.server.agency.info
         self.server.agency.lock.release()
-        ret = info.to_json()
+        ret = info.json()
         return ret
 
     def handle_get_agent_status(self, agentid: int):

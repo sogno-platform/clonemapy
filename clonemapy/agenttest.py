@@ -51,27 +51,6 @@ import clonemapy.datamodels as datamodels
 import time
 
 
-class AgentData():
-    def __init__(self):
-        self.testdata = 0
-
-    def to_json_dict(self):
-        js_dict = {'test': self.testdata}
-        return js_dict
-
-    def to_json(self):
-        js_dict = self.to_json_dict()
-        js_res = json.dumps(js_dict)
-        return js_res
-
-    def from_json_dict(self, js_dict):
-        self.testdata = js_dict.get("test", 0)
-
-    def from_json(self, js):
-        js_dict = json.loads(js)
-        self.from_json_dict(js_dict)
-
-
 class Agent(agent.Agent):
     def __init__(self, info, msg_in, msg_out, log_out):
         super().__init__(info, msg_in, msg_out, log_out)

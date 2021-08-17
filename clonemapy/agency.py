@@ -326,6 +326,8 @@ class Agency:
               queue for outgoing messages
     log_out : multiprocessing.Queue
               queue for outgoing log messages
+    ts_out : multiprocessing.Queue
+              queue for outgoing timeseries data
     lock : multiprocessing.Lock
            lock to protect variables from concurrent access
     remote_agents : dictionary of queue.Queue
@@ -342,6 +344,7 @@ class Agency:
         self.local_agents = {}
         self.msg_out = multiprocessing.Queue(1000)
         self.log_out = multiprocessing.Queue(1000)
+        self.ts_out = multiprocessing.Queue(1000)
         self.lock = multiprocessing.Lock()
         self.remote_agents = {}
         self.remote_agencies = {}
@@ -374,6 +377,9 @@ class Agency:
         y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,),
                              daemon=True)
         y.start()
+        y = threading.Thread(target=logger.send_ts, args=(self.info.masid, self.ts_out,),
+                             daemon=True)
+        y.start()
         self.start_agents()
         time.sleep(2)
         self.send_msg()
@@ -399,7 +405,7 @@ class Agency:
         """
         ag_handler = AgentHandler()
         p = multiprocessing.Process(target=agent_starter, args=(self.ag_class, agentinfo,
-                                    ag_handler.msg_in, self.msg_out, self.log_out,))
+                                    ag_handler.msg_in, self.msg_out, self.log_out, self.ts_out,))
         p.start()
         ag_handler.proc = p
         self.lock.acquire()
@@ -486,10 +492,10 @@ def remote_agency_sender(address: str, out: queue.Queue):
 
 
 def agent_starter(agent_class: agent.Agent, info: datamodels.AgentInfo,
-                  msg_in: multiprocessing.Queue,
-                  msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
+                  msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue,
+                  log_out: multiprocessing.Queue, ts_out: multiprocessing.Queue):
     """
     starting agent; this function is to be called in a separate process
     """
-    ag = agent_class(info, msg_in, msg_out, log_out)
+    ag = agent_class(info, msg_in, msg_out, log_out, ts_out)
     ag.task()

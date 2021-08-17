@@ -287,6 +287,19 @@ class LogMessage(BaseModel):
         }
 
 
+class TimeSeriesData(BaseModel):
+    masid: int = Field(..., description='ID of MAS')
+    agentid: int = Field(..., description='ID of Agent')
+    name: str = Field(..., description='name of timeseries')
+    timestamp: datetime = Field(datetime.now(), description='time at which sample was generated')
+    value: float = Field(..., description='sample value')
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat("T") + "Z",
+        }
+
+
 class State(BaseModel):
     masid: int = Field(..., description='ID of MAS')
     agentid: int = Field(..., description='ID of agent')

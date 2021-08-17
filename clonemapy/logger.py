@@ -91,6 +91,20 @@ def get_latest_logs(masid: int, agentid: int, topic: str, num: int) -> List[data
     return logs
 
 
+def post_timeseries_data(masid: int, ts: List[datamodels.TimeSeriesData]):
+    """
+    post array of time series data to logger
+    """
+    ts_dicts = []
+    for i in ts:
+        ts_dict = json.loads(i.json())
+        ts_dicts.append(ts_dict)
+    js = json.dumps(ts_dicts)
+    resp = requests.post(Host+"/api/series/"+str(masid), data=js)
+    if resp.status_code != 201:
+        logging.error("Logger error")
+
+
 def put_state(masid: int, agentid: int, state: datamodels.State):
     """
     update state of agent
@@ -135,3 +149,18 @@ def send_logs(masid: int, log_queue: queue.Queue):
             post_logs(masid, logs)
         else:
             print(log.json())
+
+
+def send_timeseries_data(masid: int, ts_queue: queue.Queue):
+    """
+    wait for timeseries data in the queue and send them to logger (to be executed in seperate thread)
+    """
+    log_on = os.environ['CLONEMAP_LOGGING']
+    while True:
+        ts = ts_queue.get()
+        if log_on == "ON":
+            tss = []
+            tss.append(ts)
+            post_logs(masid, tss)
+        else:
+            pass

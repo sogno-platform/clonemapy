@@ -124,7 +124,8 @@ class Agent():
              switch for mqtt
     """
     def __init__(self, info: datamodels.AgentInfo, msg_in: multiprocessing.Queue,
-                 msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue):
+                 msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue,
+                 ts_out: multiprocessing.Queue):
         super().__init__()
         self.id = info.id
         self.nodeid = info.spec.nodeid
@@ -135,7 +136,7 @@ class Agent():
         self._customQueue = None
         self.masid = info.masid
         self.acl = ACL(info.id, msg_in, msg_out, self._update_config)
-        self.logger = Logger(info.masid, info.id, log_out)
+        self.logger = Logger(info.masid, info.id, log_out, ts_out)
         self.df = DF(info.masid, info.id, info.spec.nodeid)
         self.mqtt = MQTT()
         self._lock = threading.Lock()
@@ -547,11 +548,12 @@ class Logger():
     log_out : multiprocessing.Queue
               queue for log messages of agent
     """
-    def __init__(self, masid: int, agentid: int, log_out):
+    def __init__(self, masid: int, agentid: int, log_out, ts_out):
         super().__init__()
         self._id = agentid
         self._masid = masid
         self._log_out = log_out
+        self._ts_out = ts_out
 
     def new_log(self, topic: str, msg: str, data: str):
         """
@@ -560,6 +562,14 @@ class Logger():
         log = datamodels.LogMessage(masid=self._masid, agentid=self._id, topic=topic, msg=msg,
                                     data=data)
         self._log_out.put(log)
+
+    def new_timeseries_data(self, ts_name: str, value: float):
+        """
+        stores one timeseries sample
+        """
+        ts = datamodels.TimeSeriesData(masid=self._masid, agentid=self._id, name=ts_name,
+                                       value=value)
+        self._ts_out.put(ts)
 
 
 class ACLBehavior(Behavior):

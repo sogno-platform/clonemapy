@@ -185,12 +185,18 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             msg = datamodels.ACLMessage.parse_obj(i)
             # msg.from_json_dict(i)
             msgs.append(msg)
+        self.lock.acquire()
+        masid = self.server.agency.info.masid
+        self.lock.release()
         for i in msgs:
             self.server.agency.lock.acquire()
             local_agent = self.server.agency.local_agents.get(i.receiver, None)
             self.server.agency.lock.release()
             if local_agent is not None:
                 local_agent.msg_in.put(i)
+                log = datamodels.LogMessage(masid=masid, agentid=i.sender, topic="msg",
+                                            msg="ACL receive", data="dummy")
+                self.server.agency.log_out.put(log)
 
     def handle_post_uneliv_msg(self):
         """
@@ -426,10 +432,15 @@ class Agency:
         """
         send messages from local agents
         """
+        self.lock.acquire()
+        masid = self.info.masid
+        self.lock.release()
         while True:
             msg = self.msg_out.get()
             recv = msg.receiver
             msg.agencys = self.info.name
+            log = datamodels.LogMessage(masid=masid, agentid=msg.sender, topic="msg",
+                                        msg="ACL send", data="dummy")
             self.lock.acquire()
             local_agent = self.local_agents.get(recv, None)
             recv_agency = self.remote_agents.get(recv, None)
@@ -437,12 +448,10 @@ class Agency:
             if local_agent is not None:
                 # agent is local -> add message to its queue
                 local_agent.msg_in.put(msg)
+                self.log_out.put(log)
                 continue
             elif recv_agency is None:
                 # agent is non-local, but address of agent is unknown -> request agent address
-                self.lock.acquire()
-                masid = self.info.masid
-                self.lock.release()
                 addr = ams.get_agent_address("ams:9000", masid, recv)
                 if addr.agency == "":
                     logging.error("Invalid agent address")
@@ -467,6 +476,7 @@ class Agency:
                 recv_agency = agency
             # add message to queue of remote agent
             recv_agency.put(msg)
+            self.log_out.put(log)
 
     def terminate(self, sig, frame):
         for i in self.local_agents:

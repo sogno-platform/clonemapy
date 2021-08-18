@@ -383,7 +383,7 @@ class Agency:
         y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,),
                              daemon=True)
         y.start()
-        y = threading.Thread(target=logger.send_ts, args=(self.info.masid, self.ts_out,),
+        y = threading.Thread(target=logger.send_timeseries_data, args=(self.info.masid, self.ts_out,),
                              daemon=True)
         y.start()
         self.start_agents()

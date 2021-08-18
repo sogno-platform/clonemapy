@@ -111,7 +111,13 @@ def get_mas(host: str, masid: int) -> datamodels.MASInfo:
 
 def delete_mas(host: str, masid: int):
     resp = requests.delete("http://"+host+"/api/clonemap/mas/"+str(masid))
-    if resp.status_code != 201:
+    if resp.status_code != 200:
+        logging.error("AMS error")
+
+
+def delete_all_mass(host: str):
+    resp = requests.delete("http://"+host+"/api/clonemap/mas")
+    if resp.status_code != 200:
         logging.error("AMS error")
 
 
@@ -177,7 +183,7 @@ def get_agent_address(host: str, masid: int, agentid: int) -> datamodels.Address
 
 def delete_agent(host: str, masid: int, agentid: int):
     resp = requests.delete("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid))
-    if resp.status_code != 201:
+    if resp.status_code != 200:
         logging.error("AMS error")
 
 
@@ -234,6 +240,10 @@ def update_or_create_agent(host: str, image: str, secret: str, masid: int, name:
 
 
 if __name__ == "__main__":
-    update_or_create_agent("localhost:30009", "agency", "", 0, "superagent2", "superconfig2")
-    agents = get_agents("localhost:30009", 0)
+    update_or_create_agent("137.226.133.171:30009",
+                           "registry.git-ce.rwth-aachen.de/ebc/projects/ebc_acs0017_bmwi_agent/agents_python/agentlib:base",
+                           "agentlib", 0,
+                           "superagent",
+                           "blabla")
+    agents = get_agents("137.226.133.171:30009", 0)
     print(agents)

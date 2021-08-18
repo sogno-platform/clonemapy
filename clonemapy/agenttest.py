@@ -44,7 +44,6 @@
 This module implements the agent class for the pingpong benchmark
 """
 
-import json
 import clonemapy.agent as agent
 import clonemapy.agency as agency
 import clonemapy.datamodels as datamodels
@@ -52,8 +51,8 @@ import time
 
 
 class Agent(agent.Agent):
-    def __init__(self, info, msg_in, msg_out, log_out):
-        super().__init__(info, msg_in, msg_out, log_out)
+    def __init__(self, info, msg_in, msg_out, log_out, ts_out):
+        super().__init__(info, msg_in, msg_out, log_out, ts_out)
 
     def task(self):
         beh = self.new_custom_update_behavior(self.custom_handler)

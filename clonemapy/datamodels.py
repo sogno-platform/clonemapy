@@ -207,6 +207,47 @@ class MASs(BaseModel):
     instances: List['MASInfo'] = Field(..., description='all mas running in clonemap')
 
 
+class FipaPerformative(Enum):
+    PNone = 0
+    AcceptProposal = 1
+    Agree = 2
+    Cancel = 3
+    CallForProposal = 4
+    Confirm = 5
+    Disconfirm = 6
+    Failure = 7
+    Inform = 8
+    InformIf = 9
+    InformRef = 10
+    NotUnderstood = 11
+    Propagate = 12
+    Propose = 13
+    Proxy = 14
+    QueryIf = 15
+    QueryRef = 16
+    Refuse = 17
+    RejectProposal = 18
+    Request = 19
+    RequestWhen = 20
+    RequestWhenever = 21
+    Subscribe = 22
+
+
+class FipaProtocol(Enum):
+    PNone = 0
+    Request = 1
+    Query = 2
+    RequestWhen = 3
+    ContractNet = 4
+    IteratedContractNet = 5
+    EnglishAuction = 6
+    DutchAuction = 7
+    Brokering = 8
+    Recruiting = 9
+    Subscribe = 10
+    Propose = 11
+
+
 class ACLMessage(BaseModel):
     ts: datetime = Field(datetime.now(), description='sending time')
     perf: int = Field(
@@ -272,6 +313,21 @@ class ACLMessage(BaseModel):
             datetime: lambda v: v.isoformat("T") + "Z",
         }
 
+    def __str__(self):
+        ret = "Sender: " + str(self.sender) + ";Receiver: " + str(self.receiver) + ";Timestamp: "
+        ret += str(self.ts) + ";Protocol: "
+        try:
+            ret += FipaProtocol(self.prot).name
+        except ValueError:
+            ret += "Unknown(" + str(self.prot) + ")"
+        ret += ";Performative: "
+        try:
+            ret += FipaPerformative(self.perf).name
+        except ValueError:
+            ret += "Unknown(" + str(self.perf) + ")"
+        ret += ";Content: " + self.content
+        return ret
+
 
 class LogMessage(BaseModel):
     masid: int = Field(..., description='ID of MAS')
@@ -336,9 +392,10 @@ class Service(BaseModel):
 
 if __name__ == "__main__":
     msg = ACLMessage(perf=0, sender=0, agencys="s", receiver=1, agencyr="r",
-                     content="test", prot=0)
+                     content="test", prot=10)
     print(msg)
     js = msg.json()
     print(js)
     msg2 = ACLMessage.parse_raw(js, encoding='utf8')
-    print(msg2)
+    tem = str(msg2)
+    print(tem)

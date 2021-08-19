@@ -195,7 +195,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             if local_agent is not None:
                 local_agent.msg_in.put(i)
                 log = datamodels.LogMessage(masid=masid, agentid=i.sender, topic="msg",
-                                            msg="ACL receive", data="dummy")
+                                            msg="ACL receive", data=str(i))
                 self.server.agency.log_out.put(log)
 
     def handle_post_uneliv_msg(self):
@@ -383,7 +383,8 @@ class Agency:
         y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,),
                              daemon=True)
         y.start()
-        y = threading.Thread(target=logger.send_timeseries_data, args=(self.info.masid, self.ts_out,),
+        y = threading.Thread(target=logger.send_timeseries_data,
+                             args=(self.info.masid, self.ts_out,),
                              daemon=True)
         y.start()
         self.start_agents()
@@ -440,7 +441,7 @@ class Agency:
             recv = msg.receiver
             msg.agencys = self.info.name
             log = datamodels.LogMessage(masid=masid, agentid=msg.sender, topic="msg",
-                                        msg="ACL send", data="dummy")
+                                        msg="ACL send", data=str(msg))
             self.lock.acquire()
             local_agent = self.local_agents.get(recv, None)
             recv_agency = self.remote_agents.get(recv, None)

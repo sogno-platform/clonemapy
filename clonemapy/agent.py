@@ -138,7 +138,7 @@ class Agent():
         self.acl = ACL(info.id, msg_in, msg_out, self._update_config)
         self.logger = Logger(info.masid, info.id, log_out, ts_out)
         self.df = DF(info.masid, info.id, info.spec.nodeid)
-        self.mqtt = MQTT()
+        self.mqtt = MQTT(self.logger)
         self._lock = threading.Lock()
         # self.task()
 
@@ -207,6 +207,43 @@ class Agent():
         self._lock.acquire()
         self._customQueue = None
         self._lock.release()
+
+
+class Logger():
+    """
+    provides functions for logging
+
+    Attributes
+    ----------
+    id : integer
+         unique ID of agent
+    masid : integer
+            ID of MAS agent is located in
+    log_out : multiprocessing.Queue
+              queue for log messages of agent
+    """
+    def __init__(self, masid: int, agentid: int, log_out, ts_out):
+        super().__init__()
+        self._id = agentid
+        self._masid = masid
+        self._log_out = log_out
+        self._ts_out = ts_out
+
+    def new_log(self, topic: str, msg: str, data: str):
+        """
+        stores one log messages
+        """
+        log = datamodels.LogMessage(masid=self._masid, agentid=self._id, topic=topic, msg=msg,
+                                    data=data)
+        self._log_out.put(log)
+
+    def new_timeseries_data(self, ts_name: str, value: float):
+        """
+        stores one timeseries sample
+        """
+        ts = datamodels.TimeSeriesData(masid=self._masid, agentid=self._id, name=ts_name,
+                                       value=value)
+        self._ts_out.put(ts)
 
 
 class ACL():
@@ -319,7 +356,7 @@ class MQTT():
     mqtt_on: bool
              switch for mqtt
     """
-    def __init__(self):
+    def __init__(self, log: Logger):
         super().__init__()
         mqtt_on = os.environ['CLONEMAP_MQTT']
         if mqtt_on == "ON":
@@ -327,6 +364,7 @@ class MQTT():
             self._connect()
             self._msg_in_default = queue.Queue(1000)
             self._msg_in_topic = {}
+            self._logger = log
         else:
             self._on = False
         self._lock = threading.Lock()
@@ -346,6 +384,7 @@ class MQTT():
         if not self._on:
             return
         self._client.publish(topic, payload, qos, retain)
+        self._logger.new_log("msg", "MQTT publish", "Topic: "+topic+";Content: "+payload)
 
     def recv_msg(self) -> mqtt.MQTTMessage:
         """
@@ -377,10 +416,12 @@ class MQTT():
     def _on_connect(self, client: mqtt.Client, userdata, flags, rc):
         pass
 
-    def _on_message(self, client: mqtt.Client, userdata, msg):
+    def _on_message(self, client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
         """
         add received mqtt message to message queue
         """
+        self._logger.new_log("msg", "MQTT receive",
+                             "Topic: "+msg.topic+";Content: "+str(msg.payload))
         self._route_message(msg)
 
     def _connect(self):
@@ -533,43 +574,6 @@ class DF():
             return
         del self._registered_svcs[desc]
         df.delete_svc(self._masid, svcid)
-
-
-class Logger():
-    """
-    provides functions for logging
-
-    Attributes
-    ----------
-    id : integer
-         unique ID of agent
-    masid : integer
-            ID of MAS agent is located in
-    log_out : multiprocessing.Queue
-              queue for log messages of agent
-    """
-    def __init__(self, masid: int, agentid: int, log_out, ts_out):
-        super().__init__()
-        self._id = agentid
-        self._masid = masid
-        self._log_out = log_out
-        self._ts_out = ts_out
-
-    def new_log(self, topic: str, msg: str, data: str):
-        """
-        stores one log messages
-        """
-        log = datamodels.LogMessage(masid=self._masid, agentid=self._id, topic=topic, msg=msg,
-                                    data=data)
-        self._log_out.put(log)
-
-    def new_timeseries_data(self, ts_name: str, value: float):
-        """
-        stores one timeseries sample
-        """
-        ts = datamodels.TimeSeriesData(masid=self._masid, agentid=self._id, name=ts_name,
-                                       value=value)
-        self._ts_out.put(ts)
 
 
 class ACLBehavior(Behavior):

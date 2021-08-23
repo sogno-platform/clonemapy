@@ -70,15 +70,17 @@ def post_logs(masid: int, logs: List[datamodels.LogMessage]):
         log_dict = json.loads(i.json())
         log_dicts.append(log_dict)
     js = json.dumps(log_dicts)
-    resp = requests.post(Host+"/api/logging/"+str(masid)+"/list", data=js)
+    url = Host+"/api/logging/"+str(masid)+"/list"
+    resp = requests.post(url, data=js)
     if resp.status_code != 201:
-        logging.error("Logger error")
+        logging.error("Logger error for POST "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def get_latest_logs(masid: int, agentid: int, topic: str, num: int) -> List[datamodels.LogMessage]:
     logs = []
-    resp = requests.get(Host+"/api/logging/"+str(masid)+"/"+str(agentid)+"/"+topic+"/latest/" +
-                        str(num))
+    url = Host+"/api/logging/"+str(masid)+"/"+str(agentid)+"/"+topic+"/latest/" + str(num)
+    resp = requests.get(url)
     if resp.status_code == 200:
         log_dicts = json.loads(resp.text)
         if log_dicts is None:
@@ -87,7 +89,8 @@ def get_latest_logs(masid: int, agentid: int, topic: str, num: int) -> List[data
             log = datamodels.LogMessage.parse_obj(i)
             logs.append(log)
     else:
-        logging.error("DF error")
+        logging.error("Logger error for GET "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
     return logs
 
 
@@ -100,9 +103,11 @@ def post_timeseries_data(masid: int, ts: List[datamodels.TimeSeriesData]):
         ts_dict = json.loads(i.json())
         ts_dicts.append(ts_dict)
     js = json.dumps(ts_dicts)
-    resp = requests.post(Host+"/api/series/"+str(masid), data=js)
+    url = Host+"/api/series/"+str(masid)
+    resp = requests.post(url, data=js)
     if resp.status_code != 201:
-        logging.error("Logger error")
+        logging.error("Logger error for POST "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def put_state(masid: int, agentid: int, state: datamodels.State):
@@ -110,9 +115,11 @@ def put_state(masid: int, agentid: int, state: datamodels.State):
     update state of agent
     """
     js = state.json()
-    resp = requests.post(Host+"/api/state/"+str(masid)+"/"+str(agentid), data=js)
+    url = Host+"/api/state/"+str(masid)+"/"+str(agentid)
+    resp = requests.post(url, data=js)
     if resp.status_code != 201:
-        logging.error("Logger error")
+        logging.error("Logger error for PUT "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def update_states(masid: int, states: List[datamodels.State]):
@@ -121,18 +128,23 @@ def update_states(masid: int, states: List[datamodels.State]):
         state_dict = json.loads(i.json())
         state_dicts.append(state_dict)
     js = json.dumps(state_dicts)
-    resp = requests.post(Host+"/api/state/"+str(masid)+"/list", data=js)
+    url = Host+"/api/state/"+str(masid)+"/list"
+    resp = requests.post(url, data=js)
     if resp.status_code != 201:
-        logging.error("Logger error")
+        logging.error("Logger error for POST "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def get_state(masid: int, agentid: int) -> datamodels.State:
     """
     request state of agent
     """
-    resp = requests.get(Host+"/api/state/"+str(masid)+"/"+str(agentid))
+    url = Host+"/api/state/"+str(masid)+"/"+str(agentid)
+    resp = requests.get(url)
     if resp.status_code == 200:
         return datamodels.State.parse_raw(resp.text)
+    logging.error("Logger error for GET "+url+" Code: "+str(resp.status_code)+", Body: " +
+                  resp.text)
     return None
 
 
@@ -141,6 +153,7 @@ def send_logs(masid: int, log_queue: queue.Queue):
     wait for logs in the queue and send them to logger (to be executed in seperate thread)
     """
     log_on = os.environ['CLONEMAP_LOGGING']
+    python_logger = logging.getLogger()
     while True:
         log = log_queue.get()
         if log_on == "ON":
@@ -148,12 +161,19 @@ def send_logs(masid: int, log_queue: queue.Queue):
             logs.append(log)
             post_logs(masid, logs)
         else:
-            print(log.json())
+            if log.topic == "error":
+                python_logger.error("Agent"+str(log.agentid)+": " + str(log.msg)+" ("+log.data+")")
+            elif log.topic == "debug":
+                python_logger.debug("Agent"+str(log.agentid)+": " + str(log.msg)+" ("+log.data+")")
+            else:
+                python_logger.info("Agent"+str(log.agentid)+" ["+log.topic+"]: " + str(log.msg) +
+                                   " ("+log.data+")")
 
 
 def send_timeseries_data(masid: int, ts_queue: queue.Queue):
     """
-    wait for timeseries data in the queue and send them to logger (to be executed in seperate thread)
+    wait for timeseries data in the queue and send them to logger (to be executed in seperate
+    thread)
     """
     log_on = os.environ['CLONEMAP_LOGGING']
     while True:

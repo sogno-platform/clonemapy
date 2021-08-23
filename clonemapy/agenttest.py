@@ -48,6 +48,7 @@ import clonemapy.agent as agent
 import clonemapy.agency as agency
 import clonemapy.datamodels as datamodels
 import time
+import logging
 
 
 class Agent(agent.Agent):
@@ -58,21 +59,33 @@ class Agent(agent.Agent):
         beh = self.new_custom_update_behavior(self.custom_handler)
         beh.start()
         time.sleep(5)
-        print("Hello")
         recv = (self.id+1) % 2
         msg = datamodels.ACLMessage(receiver=recv, content="msg from "+str(self.id))
         self.acl.send_message(msg)
         self.logger.new_log("app", "agent"+str(self.id), "")
         svc = datamodels.Service(desc="svc by " + str(self.id))
         svcid = self.df.register_service(svc)
-        print(svcid)
         msg = self.acl.recv_message_wait()
-        print(msg)
         self.loop_forever()
 
     def custom_handler(self, custom: str):
         print(custom)
 
 
+# class CustomLogger(logging.StreamHandler):
+#     def __init__(self):
+#         logging.StreamHandler.__init__(self)
+
+#     def emit(self, record):
+#         print(record.msg+"ttt")
+
+
 if __name__ == "__main__":
     ag = agency.Agency(Agent)
+    # cl = CustomLogger()
+    # logger = logging.getLogger()
+    # logger.addHandler(cl)
+    # logger2 = logging.getLogger(__name__)
+    # # logger2.addHandler(cl)
+    # logger2.error("bla")
+    # print(logger2.handlers)

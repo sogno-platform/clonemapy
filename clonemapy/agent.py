@@ -135,8 +135,8 @@ class Agent():
         self.custom = info.spec.custom
         self._customQueue = None
         self.masid = info.masid
-        self.acl = ACL(info.id, msg_in, msg_out, self._update_config)
         self.logger = Logger(info.masid, info.id, log_out, ts_out)
+        self.acl = ACL(info.id, msg_in, msg_out, self._update_config, self.logger)
         self.df = DF(info.masid, info.id, info.spec.nodeid)
         self.mqtt = MQTT(self.logger)
         self._lock = threading.Lock()
@@ -262,7 +262,7 @@ class ACL():
         dict mapping protocols to incoming queues which are checked by behaviors
     """
     def __init__(self, agent_id: int, msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue,
-                 custom_callback: Callable[[str], None]):
+                 custom_callback: Callable[[str], None], log: Logger):
         super().__init__()
         self._id = agent_id
         self._msg_in = msg_in
@@ -270,6 +270,7 @@ class ACL():
         self._msg_out = msg_out
         self._msg_in_protocol = {}
         self._custom_callback = custom_callback
+        self._logger = log
         self._lock = threading.Lock()
         x = threading.Thread(target=self._handle_messages, daemon=True)
         x.start()
@@ -306,6 +307,7 @@ class ACL():
         while True:
             msg = self._msg_in.get()
             self._route_message(msg)
+            self._logger.new_log("msg", "ACL receive", str(msg))
 
     def _route_message(self, msg: datamodels.ACLMessage):
         """

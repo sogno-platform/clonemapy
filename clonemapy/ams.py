@@ -58,15 +58,17 @@ def alive(host: str) -> bool:
 
 
 def get_clonemap(host: str) -> datamodels.CloneMAP:
-    resp = requests.get("http://"+host+"/api/clonemap")
+    url = "http://"+host+"/api/clonemap"
+    resp = requests.get(url)
     if resp.status_code == 200:
         return datamodels.CloneMAP.parse_raw(resp.text)
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
 def get_mass(host: str) -> List[datamodels.MASInfoShort]:
-    resp = requests.get("http://"+host+"/api/clonemap/mas")
+    url = "http://"+host+"/api/clonemap/mas"
+    resp = requests.get(url)
     if resp.status_code == 200:
         mass = []
         mas_dicts = json.loads(resp.text)
@@ -75,16 +77,17 @@ def get_mass(host: str) -> List[datamodels.MASInfoShort]:
         for i in mas_dicts:
             mass.append(datamodels.MASInfoShort.parse_obj(i))
         return mass
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
 def get_mass_by_name(host: str, mas_name: str) -> List[int]:
-    resp = requests.get("http://"+host+"/api/clonemap/mas/name/"+mas_name)
+    url = "http://"+host+"/api/clonemap/mas/name/"+mas_name
+    resp = requests.get(url)
     if resp.status_code == 200:
         mass = json.loads(resp.text)
         return mass
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
@@ -93,42 +96,50 @@ def post_mas(host: str, mas: datamodels.MASSpec):
     post mas spec to start a mas
     """
     js = mas.json()
-    resp = requests.post("http://"+host+"/api/clonemap/mas", data=js)
+    url = "http://"+host+"/api/clonemap/mas"
+    resp = requests.post(url, data=js)
     if resp.status_code != 201:
-        logging.error("AMS error")
+        logging.error("AMS error for POST "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def get_mas(host: str, masid: int) -> datamodels.MASInfo:
     """
     get info of mas
     """
-    resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid))
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)
+    resp = requests.get(url)
     if resp.status_code == 200:
         return datamodels.MASInfo.parse_raw(resp.text)
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
 def delete_mas(host: str, masid: int):
-    resp = requests.delete("http://"+host+"/api/clonemap/mas/"+str(masid))
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)
+    resp = requests.delete(url)
     if resp.status_code != 200:
-        logging.error("AMS error")
+        logging.error("AMS error for DELETE "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def delete_all_mass(host: str):
-    resp = requests.delete("http://"+host+"/api/clonemap/mas")
+    url = "http://"+host+"/api/clonemap/mas"
+    resp = requests.delete(url)
     if resp.status_code != 200:
-        logging.error("AMS error")
+        logging.error("AMS error for DELETE "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def get_agents(host: str, masid: int) -> datamodels.Agents:
     """
     get agents in mas
     """
-    resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents")
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents"
+    resp = requests.get(url)
     if resp.status_code == 200:
         return datamodels.Agents.parse_raw(resp.text)
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
@@ -136,11 +147,12 @@ def get_agents_by_name(host: str, masid: int, agent_name) -> List[int]:
     """
     get agents in mas by name
     """
-    resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/name/"+agent_name)
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/name/"+agent_name
+    resp = requests.get(url)
     if resp.status_code == 200:
         agents = json.loads(resp.text)
         return agents
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
@@ -153,19 +165,22 @@ def post_agents(host: str, masid: int, im_specs: List[datamodels.ImageGroupSpec]
         im_dict = json.loads(i.json())
         im_dicts.append(im_dict)
     js = json.dumps(im_dicts)
-    resp = requests.post("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents", data=js)
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents"
+    resp = requests.post(url, data=js)
     if resp.status_code != 201:
-        logging.error("AMS error")
+        logging.error("AMS error for POST "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def get_agent(host: str, masid: int, agentid: int) -> datamodels.AgentInfo:
     """
     get agents in mas
     """
-    resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid))
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)
+    resp = requests.get()
     if resp.status_code == 200:
         return datamodels.AgentInfo.parse_raw(resp.text)
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
@@ -173,35 +188,38 @@ def get_agent_address(host: str, masid: int, agentid: int) -> datamodels.Address
     """
     get address of agent
     """
-    resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid) +
-                        "/address")
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid) + "/address"
+    resp = requests.get(url)
     if resp.status_code == 200:
         return datamodels.Address.parse_raw(resp.text)
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
 def delete_agent(host: str, masid: int, agentid: int):
-    resp = requests.delete("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid))
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid)
+    resp = requests.delete(url)
     if resp.status_code != 200:
-        logging.error("AMS error")
+        logging.error("AMS error for DELETE "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def put_agent_custom(host: str, masid: int, agentid: int, custom: str):
-    resp = requests.put("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid) +
-                        "/custom", data=custom)
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/agents/"+str(agentid) + "/custom"
+    resp = requests.put(url, data=custom)
     if resp.status_code != 200:
-        logging.error("AMS error")
+        logging.error("AMS error for PUT "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
 
 
 def get_agencies(host: str, masid: int) -> datamodels.Agencies:
     """
     get agencies in mas
     """
-    resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid)+"/agencies")
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/agencies"
+    resp = requests.get(url)
     if resp.status_code == 200:
         return datamodels.Agencies.parse_raw(resp.text)
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
@@ -210,11 +228,12 @@ def get_agency_info_full(host: str, masid: int, imid: int,
     """
     get configuration of agency
     """
-    resp = requests.get("http://"+host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid) +
-                        "/agency/"+str(agencyid))
+    url = "http://"+host+"/api/clonemap/mas/"+str(masid)+"/imgroup/"+str(imid) + "/agency/"
+    url += str(agencyid)
+    resp = requests.get(url)
     if resp.status_code == 200:
         return datamodels.AgencyInfoFull.parse_raw(resp.text)
-    logging.error("AMS error")
+    logging.error("AMS error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None
 
 
@@ -233,7 +252,7 @@ def update_or_create_agent(host: str, image: str, secret: str, masid: int, name:
         new_agent(host, image, secret, masid, name, custom)
         return
     if len(agents) > 1:
-        logging.error("agent is not unique")
+        logging.error("agent "+name+" already exists")
         return
     agentid = agents[0]
     put_agent_custom(host, masid, agentid, custom)

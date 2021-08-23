@@ -84,7 +84,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
-        logging.info("Received Request: GET " + self.path)
+        logging.info("Agency: Received Request: GET " + self.path)
 
         if len(path) == 3:
             if path[2] == "agency":
@@ -110,7 +110,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
-            logging.error(ret)
+            logging.error("Agency: " + ret)
 
     def handle_get_agency(self):
         """
@@ -136,7 +136,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
-        logging.info("Received Request: POST " + self.path)
+        logging.info("Agency: Received Request: POST " + self.path)
 
         if len(path) == 4:
             if path[2] == "agency" and path[3] == "agents":
@@ -161,7 +161,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
-            logging.error(ret)
+            logging.error("Agency: "+ret)
 
     def handle_post_agent(self):
         """
@@ -194,9 +194,6 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.server.agency.lock.release()
             if local_agent is not None:
                 local_agent.msg_in.put(i)
-                log = datamodels.LogMessage(masid=masid, agentid=i.sender, topic="msg",
-                                            msg="ACL receive", data=str(i))
-                self.server.agency.log_out.put(log)
 
     def handle_post_uneliv_msg(self):
         """
@@ -211,7 +208,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
-        logging.info("Received Request: PUT " + self.path)
+        logging.info("Agency: Received Request: PUT " + self.path)
 
         if len(path) == 6:
             if path[2] == "agency" and path[3] == "agents" and path[5] == "custom":
@@ -234,7 +231,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
-            logging.error(ret)
+            logging.error("Agency: "+ret)
 
     def handle_put_agent_custom(self, agentid: int):
         """
@@ -259,7 +256,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         path = self.path.split("/")
         ret = ""
         resvalid = False
-        logging.info("Received Request: DELETE " + self.path)
+        logging.info("Agency: Received Request: DELETE " + self.path)
 
         if len(path) == 5:
             if path[2] == "agency" and path[3] == "agents":
@@ -282,7 +279,7 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
-            logging.error(ret)
+            logging.error("Agency: "+ret)
 
     def handle_delete_agent(self, agentid: int):
         """
@@ -367,7 +364,7 @@ class Agency:
                                 level=logging.ERROR)
 
         temp = socket.gethostname()
-        logging.info("Starting agency " + temp)
+        logging.info("Agency: Starting agency " + temp)
         hostname = temp.split("-")
         self.hostname = hostname
         if len(hostname) < 4:
@@ -400,11 +397,11 @@ class Agency:
             # self.info.id = conf.id
             self.info.logger = conf.logger
             self.info.agents = conf.agents
-            logging.info("Starting agents")
+            logging.info("Agency: Starting agents")
             for i in conf.agents:
                 self.create_agent(i)
         else:
-            logging.error("Received invalid agency info from AMS")
+            logging.error("Agency: Received invalid agency info from AMS")
 
     def create_agent(self, agentinfo: datamodels.AgentInfo):
         """
@@ -418,7 +415,7 @@ class Agency:
         self.lock.acquire()
         self.local_agents[agentinfo.id] = ag_handler
         self.lock.release()
-        logging.info("Started agent "+str(agentinfo.id))
+        logging.info("Agency: Started agent "+str(agentinfo.id))
 
     def listen(self):
         """
@@ -455,7 +452,7 @@ class Agency:
                 # agent is non-local, but address of agent is unknown -> request agent address
                 addr = ams.get_agent_address("ams:9000", masid, recv)
                 if addr.agency == "":
-                    logging.error("Invalid agent address")
+                    logging.error("Agency: Invalid agent address for agent "+str(recv))
                     continue
                 self.lock.acquire()
                 # check if agency of remote agent is known
@@ -482,7 +479,7 @@ class Agency:
     def terminate(self, sig, frame):
         for i in self.local_agents:
             self.local_agents[i].proc.terminate()
-            logging.info("Stopped agent " + str(i))
+            logging.info("Agency: Stopped agent " + str(i))
         sys.exit(0)
 
 

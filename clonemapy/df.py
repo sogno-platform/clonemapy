@@ -63,11 +63,12 @@ def post_svc(masid: int, svc: datamodels.Service) -> datamodels.Service:
     post service to DF
     """
     js = svc.json()
-    resp = requests.post(Host+"/api/df/"+str(masid)+"/svc", data=js)
+    url = Host+"/api/df/"+str(masid)+"/svc"
+    resp = requests.post(url, data=js)
     if resp.status_code == 201:
         svc = datamodels.Service.parse_raw(resp.text)
     else:
-        logging.error("DF error")
+        logging.error("DF error for POST "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return svc
 
 
@@ -76,7 +77,8 @@ def get_svc(masid: int, desc: str) -> list:
     request services with matching description
     """
     svcs = []
-    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc)
+    url = Host+"/api/df/"+str(masid)+"/svc/desc/"+desc
+    resp = requests.get(url)
     if resp.status_code == 200:
         svc_dicts = json.loads(resp.text)
         if svc_dicts is None:
@@ -86,7 +88,7 @@ def get_svc(masid: int, desc: str) -> list:
             # svc.from_json_dict(i)
             svcs.append(svc)
     else:
-        logging.error("DF error")
+        logging.error("DF error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return svcs
 
 
@@ -95,8 +97,8 @@ def get_local_svc(masid: int, desc: str, nodeid: int, dist: float) -> list:
     request local services with matching description
     """
     svcs = []
-    resp = requests.get(Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/" +
-                        str(dist))
+    url = Host+"/api/df/"+str(masid)+"/svc/desc/"+desc+"/node/"+str(nodeid)+"/dist/" + str(dist)
+    resp = requests.get(url)
     if resp.status_code == 200:
         svc_dicts = json.loads(resp.text)
         if svc_dicts is None:
@@ -106,7 +108,7 @@ def get_local_svc(masid: int, desc: str, nodeid: int, dist: float) -> list:
             # svc.from_json_dict(i)
             svcs.append(svc)
     else:
-        logging.error("DF error")
+        logging.error("DF error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return svcs
 
 
@@ -114,9 +116,11 @@ def delete_svc(masid: int, svcid: int):
     """
     delete service with svcid
     """
-    resp = requests.delete(Host+"/api/df/"+str(masid)+"/svc/id/"+svcid)
+    url = Host+"/api/df/"+str(masid)+"/svc/id/"+svcid
+    resp = requests.delete(url)
     if resp.status_code != 200:
-        logging.error("DF error")
+        logging.error("DF error for DELETE "+url+" Code: "+str(resp.status_code)+", Body: " +
+                      resp.text)
 
 
 def post_graph(masid: int, gr: datamodels.Graph):
@@ -124,14 +128,16 @@ def post_graph(masid: int, gr: datamodels.Graph):
     post graph to DF
     """
     js = gr.json()
-    resp = requests.post(Host+"/api/df/"+str(masid)+"/graph", data=js)
+    url = Host+"/api/df/"+str(masid)+"/graph"
+    resp = requests.post(url, data=js)
     if resp.status_code != 201:
-        logging.error("DF error")
+        logging.error("DF error for POST "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
 
 
 def get_graph(masid: int) -> datamodels.Graph:
-    resp = requests.get(Host+"/api/df/"+str(masid)+"/graph")
+    url = Host+"/api/df/"+str(masid)+"/graph"
+    resp = requests.get(url)
     if resp.status_code == 200:
         return datamodels.Graph.parse_raw(resp.text)
-    logging.error("DF error")
+    logging.error("DF error for GET "+url+" Code: "+str(resp.status_code)+", Body: "+resp.text)
     return None

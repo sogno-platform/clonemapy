@@ -67,7 +67,7 @@ class StatusCode(Enum):
 
 class Status(BaseModel):
     code: 'StatusCode' = Field(..., description='status code')
-    lastupdate: datetime = Field(datetime.now(), description='time of last update')
+    lastupdate: datetime = Field(default_factory=datetime.now, description='time of last update')
 
     class Config:
         json_encoders = {
@@ -249,7 +249,7 @@ class FipaProtocol(Enum):
 
 
 class ACLMessage(BaseModel):
-    ts: datetime = Field(datetime.now(), description='sending time')
+    ts: datetime = Field(default_factory=datetime.now, description='sending time')
     perf: int = Field(
         0, description='Denotes the type of the communicative act of the ACL message'
     )
@@ -333,7 +333,8 @@ class LogMessage(BaseModel):
     masid: int = Field(..., description='ID of MAS')
     agentid: int = Field(..., description='ID of Agent')
     topic: str = Field(..., description='type of logging')
-    timestamp: datetime = Field(datetime.now(), description='time at which message was generated')
+    timestamp: datetime = Field(default_factory=datetime.now,
+                                description='time at which message was generated')
     msg: str = Field(..., description='message to be logged')
     data: Optional[str] = Field(None, description='additional data')
 
@@ -347,7 +348,8 @@ class TimeSeriesData(BaseModel):
     masid: int = Field(..., description='ID of MAS')
     agentid: int = Field(..., description='ID of Agent')
     name: str = Field(..., description='name of timeseries')
-    timestamp: datetime = Field(datetime.now(), description='time at which sample was generated')
+    timestamp: datetime = Field(default_factory=datetime.now,
+                                description='time at which sample was generated')
     value: float = Field(..., description='sample value')
 
     class Config:
@@ -379,8 +381,8 @@ class Service(BaseModel):
     agentid: int = Field(0, description='id of agent which registered service')
     nodeid: int = Field(0, description='id of node')
     masid: int = Field(0, description='id of MAS')
-    createdat: datetime = Field(datetime.now(), description='time of creation')
-    changedat: datetime = Field(datetime.now(), description='time of last change')
+    createdat: datetime = Field(default_factory=datetime.now, description='time of creation')
+    changedat: datetime = Field(default_factory=datetime.now, description='time of last change')
     desc: str = Field(..., description='description of service')
     dist: float = Field(0, description='distance')
 

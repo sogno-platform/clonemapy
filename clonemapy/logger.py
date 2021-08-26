@@ -162,12 +162,20 @@ def send_logs(masid: int, log_queue: queue.Queue):
             post_logs(masid, logs)
         else:
             if log.topic == "error":
-                python_logger.error("Agent"+str(log.agentid)+": " + str(log.msg)+" ("+log.data+")")
+                msg = "Agent"+str(log.agentid)+": " + str(log.msg)
+                if log.data != "":
+                    msg += " ("+log.data+")"
+                python_logger.error(msg)
             elif log.topic == "debug":
-                python_logger.debug("Agent"+str(log.agentid)+": " + str(log.msg)+" ("+log.data+")")
+                msg = "Agent"+str(log.agentid)+": " + str(log.msg)
+                if log.data != "":
+                    msg += " ("+log.data+")"
+                python_logger.debug(msg)
             else:
-                python_logger.info("Agent"+str(log.agentid)+" ["+log.topic+"]: " + str(log.msg) +
-                                   " ("+log.data+")")
+                msg = "Agent"+str(log.agentid)+" ["+log.topic+"]: " + str(log.msg)
+                if log.data != "":
+                    msg += " ("+log.data+")"
+                python_logger.info(msg)
 
 
 def send_timeseries_data(masid: int, ts_queue: queue.Queue):

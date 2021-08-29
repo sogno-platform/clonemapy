@@ -186,7 +186,6 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             # msg.from_json_dict(i)
             msgs.append(msg)
         self.lock.acquire()
-        masid = self.server.agency.info.masid
         self.lock.release()
         for i in msgs:
             self.server.agency.lock.acquire()
@@ -375,9 +374,19 @@ class Agency:
         name = temp + ".mas" + hostname[1] + "agencies"
         self.info = datamodels.AgencyInfo(masid=masid, imid=imid, id=agencyid, name=name)
 
+        conf = ams.get_agency_info_full("ams:9000", self.info.masid, self.info.imid, self.info.id)
+        if conf.name != "":
+            # self.info.id = conf.id
+            self.info.logger = conf.logger
+            self.info.agents = conf.agents
+        else:
+            logging.error("Agency: Received invalid agency info from AMS")
+            return
+
         x = threading.Thread(target=self.listen, daemon=True)
         x.start()
-        y = threading.Thread(target=logger.send_logs, args=(self.info.masid, self.log_out,),
+        y = threading.Thread(target=logger.send_logs,
+                             args=(self.info.masid, self.info.logger, self.log_out,),
                              daemon=True)
         y.start()
         y = threading.Thread(target=logger.send_timeseries_data,
@@ -392,16 +401,9 @@ class Agency:
         """
         Requests the agent configuration from the ams and starts the agents
         """
-        conf = ams.get_agency_info_full("ams:9000", self.info.masid, self.info.imid, self.info.id)
-        if conf.name != "":
-            # self.info.id = conf.id
-            self.info.logger = conf.logger
-            self.info.agents = conf.agents
-            logging.info("Agency: Starting agents")
-            for i in conf.agents:
-                self.create_agent(i)
-        else:
-            logging.error("Agency: Received invalid agency info from AMS")
+        logging.info("Agency: Starting agents")
+        for i in self.info.agents:
+            self.create_agent(i)
 
     def create_agent(self, agentinfo: datamodels.AgentInfo):
         """

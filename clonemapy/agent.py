@@ -233,6 +233,9 @@ class Logger():
         """
         stores one log messages
         """
+        if (topic != "msg" or topic != "error" or topic != "debug" or topic != "app" or
+                topic != "status"):
+            return
         log = datamodels.LogMessage(masid=self._masid, agentid=self._id, topic=topic, msg=msg,
                                     data=data)
         self._log_out.put(log)

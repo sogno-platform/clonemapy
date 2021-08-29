@@ -148,7 +148,7 @@ def get_state(masid: int, agentid: int) -> datamodels.State:
     return None
 
 
-def send_logs(masid: int, log_queue: queue.Queue):
+def send_logs(masid: int, log_config: datamodels.LoggerConfig, log_queue: queue.Queue):
     """
     wait for logs in the queue and send them to logger (to be executed in seperate thread)
     """
@@ -156,6 +156,11 @@ def send_logs(masid: int, log_queue: queue.Queue):
     if log_on == "ON":
         while True:
             log = log_queue.get()
+            if ((log.topic == "msg" and not log_config.msg) or
+                    (log.topic == "app" and not log_config.app) or
+                    (log.topic == "debug" and not log_config.debug) or
+                    (log.topic == "status" and not log_config.status)):
+                continue
             logs = []
             logs.append(log)
             post_logs(masid, logs)
@@ -164,6 +169,11 @@ def send_logs(masid: int, log_queue: queue.Queue):
         python_logger.setLevel("DEBUG")
         while True:
             log = log_queue.get()
+            if ((log.topic == "msg" and not log_config.msg) or
+                    (log.topic == "app" and not log_config.app) or
+                    (log.topic == "debug" and not log_config.debug) or
+                    (log.topic == "status" and not log_config.status)):
+                continue
             if log.topic == "error":
                 msg = "Agent"+str(log.agentid)+": " + str(log.msg)
                 if log.data != "":

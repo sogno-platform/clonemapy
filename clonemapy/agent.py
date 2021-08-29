@@ -233,7 +233,7 @@ class Logger():
         """
         stores one log messages
         """
-        if (topic != "msg" or topic != "error" or topic != "debug" or topic != "app" or
+        if (topic != "msg" and topic != "error" and topic != "debug" and topic != "app" and
                 topic != "status"):
             return
         log = datamodels.LogMessage(masid=self._masid, agentid=self._id, topic=topic, msg=msg,

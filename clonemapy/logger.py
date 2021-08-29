@@ -153,14 +153,17 @@ def send_logs(masid: int, log_queue: queue.Queue):
     wait for logs in the queue and send them to logger (to be executed in seperate thread)
     """
     log_on = os.environ['CLONEMAP_LOGGING']
-    python_logger = logging.getLogger()
-    while True:
-        log = log_queue.get()
-        if log_on == "ON":
+    if log_on == "ON":
+        while True:
+            log = log_queue.get()
             logs = []
             logs.append(log)
             post_logs(masid, logs)
-        else:
+    else:
+        python_logger = logging.getLogger("agentlogs")
+        python_logger.setLevel("DEBUG")
+        while True:
+            log = log_queue.get()
             if log.topic == "error":
                 msg = "Agent"+str(log.agentid)+": " + str(log.msg)
                 if log.data != "":

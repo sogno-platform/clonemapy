@@ -97,6 +97,7 @@ class MASConfig(BaseModel):
     mqtt: 'MQTTConfig' = Field(..., description='switch for iot module')
     df: 'DFConfig' = Field(..., description='switch for df module')
     logger: 'LoggerConfig' = Field(..., description='configuration of logging module')
+    custom: Optional[str] = Field(None, description='custom config of MAS')
 
 
 class ImageGroupSpec(BaseModel):
@@ -118,7 +119,7 @@ class AgencyInfo(BaseModel):
     )
     id: int = Field(..., description='unique ID of agency')
     imid: int = Field(..., description='unique ID of image group')
-    logger: 'LoggerConfig' = Field(LoggerConfig(), description='configuration of logging')
+    # logger: 'LoggerConfig' = Field(LoggerConfig(), description='configuration of logging')
     agents: List[int] = Field([], description='list of all agents in agency')
     status: 'Status' = Field(Status(code=StatusCode.Running), description='status of agency')
 
@@ -157,6 +158,8 @@ class AgencyInfoFull(BaseModel):
     id: int = Field(..., description='ID of agency')
     name: str = Field(..., description='name of agency (corresponds to pod name)')
     imid: int = Field(..., description='id of image group')
+    masname: str = Field(..., description='name of mas')
+    mascustom: Optional[str] = Field("", description='custom config of mas')
     logger: 'LoggerConfig' = Field(LoggerConfig(), description='configuration of logging module')
     status: 'Status' = Field(Status(code=StatusCode.Running), description='status of agent')
     agents: List['AgentInfo'] = Field([], description='list of agents in agency')

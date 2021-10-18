@@ -185,8 +185,6 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
             msg = datamodels.ACLMessage.parse_obj(i)
             # msg.from_json_dict(i)
             msgs.append(msg)
-        self.lock.acquire()
-        self.lock.release()
         for i in msgs:
             self.server.agency.lock.acquire()
             local_agent = self.server.agency.local_agents.get(i.receiver, None)
@@ -377,7 +375,9 @@ class Agency:
         conf = ams.get_agency_info_full("ams:9000", self.info.masid, self.info.imid, self.info.id)
         if conf.name != "":
             # self.info.id = conf.id
-            self.info.logger = conf.logger
+            self.logger_config = conf.logger
+            self.mas_name = conf.masname
+            self.mas_custom = conf.mascustom
             self.info.agents = conf.agents
         else:
             logging.error("Agency: Received invalid agency info from AMS")
@@ -386,7 +386,7 @@ class Agency:
         x = threading.Thread(target=self.listen, daemon=True)
         x.start()
         y = threading.Thread(target=logger.send_logs,
-                             args=(self.info.masid, self.info.logger, self.log_out,),
+                             args=(self.info.masid, self.logger_config, self.log_out,),
                              daemon=True)
         y.start()
         y = threading.Thread(target=logger.send_timeseries_data,
@@ -411,6 +411,7 @@ class Agency:
         """
         ag_handler = AgentHandler()
         p = multiprocessing.Process(target=agent_starter, args=(self.ag_class, agentinfo,
+                                    self.mas_name, self.mas_custom,
                                     ag_handler.msg_in, self.msg_out, self.log_out, self.ts_out,))
         p.start()
         ag_handler.proc = p
@@ -502,10 +503,11 @@ def remote_agency_sender(address: str, out: queue.Queue):
 
 
 def agent_starter(agent_class: agent.Agent, info: datamodels.AgentInfo,
+                  mas_name: str, mas_custom: str,
                   msg_in: multiprocessing.Queue, msg_out: multiprocessing.Queue,
                   log_out: multiprocessing.Queue, ts_out: multiprocessing.Queue):
     """
     starting agent; this function is to be called in a separate process
     """
-    ag = agent_class(info, msg_in, msg_out, log_out, ts_out)
+    ag = agent_class(info, mas_name, mas_custom, msg_in, msg_out, log_out, ts_out)
     ag.task()

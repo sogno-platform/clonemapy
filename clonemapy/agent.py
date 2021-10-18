@@ -123,7 +123,8 @@ class Agent():
     mqtt_on: bool
              switch for mqtt
     """
-    def __init__(self, info: datamodels.AgentInfo, msg_in: multiprocessing.Queue,
+    def __init__(self, info: datamodels.AgentInfo, mas_name: str, mas_custom: str,
+                 msg_in: multiprocessing.Queue,
                  msg_out: multiprocessing.Queue, log_out: multiprocessing.Queue,
                  ts_out: multiprocessing.Queue):
         super().__init__()
@@ -135,6 +136,8 @@ class Agent():
         self.custom = info.spec.custom
         self._customQueue = None
         self.masid = info.masid
+        self.mas_name = mas_name
+        self.mas_custom = mas_custom
         self.logger = Logger(info.masid, info.id, log_out, ts_out)
         self.acl = ACL(info.id, msg_in, msg_out, self._update_config, self.logger)
         self.df = DF(info.masid, info.id, info.spec.nodeid)

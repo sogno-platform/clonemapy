@@ -52,8 +52,8 @@ import logging
 
 
 class Agent(agent.Agent):
-    def __init__(self, info, msg_in, msg_out, log_out, ts_out):
-        super().__init__(info, msg_in, msg_out, log_out, ts_out)
+    # def __init__(self, info, msg_in, msg_out, log_out, ts_out):
+    #     super().__init__(info, msg_in, msg_out, log_out, ts_out)
 
     def task(self):
         beh = self.new_custom_update_behavior(self.custom_handler)
@@ -63,6 +63,7 @@ class Agent(agent.Agent):
         msg = datamodels.ACLMessage(receiver=recv, content="msg from "+str(self.id))
         self.acl.send_message(msg)
         self.logger.new_log("app", "agent"+str(self.id), "")
+        self.logger.new_log("app", self.mas_name+", "+self.mas_custom, "")
         svc = datamodels.Service(desc="svc by " + str(self.id))
         svcid = self.df.register_service(svc)
         msg = self.acl.recv_message_wait()
@@ -72,12 +73,14 @@ class Agent(agent.Agent):
         print(custom)
 
 
-# class CustomLogger(logging.StreamHandler):
-#     def __init__(self):
-#         logging.StreamHandler.__init__(self)
+class CustomLogger(logging.Handler):
+    def __init__(self):
+        logging.Handler.__init__(self)
 
-#     def emit(self, record):
-#         print(record.msg+"ttt")
+    def emit(self, record):
+        print(record.msg)
+        print(record.name)
+        print(record.levelname)
 
 
 if __name__ == "__main__":
@@ -85,7 +88,7 @@ if __name__ == "__main__":
     # cl = CustomLogger()
     # logger = logging.getLogger()
     # logger.addHandler(cl)
-    # logger2 = logging.getLogger(__name__)
+    # logger2 = logging.getLogger("jababab")
     # # logger2.addHandler(cl)
     # logger2.error("bla")
     # print(logger2.handlers)

@@ -6,7 +6,7 @@ setuptools.setup(
     author="Stefan Dähling",
     author_email="SDaehling@eonerc.rwth-aachen.de",
     description="Python package for cloneMAP agents",
-    url="https://git.rwth-aachen.de/acs/public/cloud/mas/clonemapy",
+    url="https://github.com/RWTH-ACS/clonemapy",
     packages=setuptools.find_packages(),
     python_requires='>=3.5',
     install_requires=[

@@ -365,7 +365,8 @@ class Agency:
         hostname = temp.split("-")
         self.hostname = hostname
         if len(hostname) < 4:
-            pass
+            logging.error("Agency: Invalid hostname: " + temp)
+            return
         masid = int(hostname[1])
         imid = int(hostname[3])
         agencyid = int(hostname[5])

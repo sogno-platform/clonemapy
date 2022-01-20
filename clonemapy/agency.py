@@ -251,27 +251,24 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         handler function for DELETE requests
         """
         path = self.path.split("/")
-        ret = ""
+        ret = "Method Not Allowed"
         resvalid = False
         logging.info("Agency: Received Request: DELETE " + self.path)
 
         if len(path) == 5:
             if path[2] == "agency" and path[3] == "agents":
                 try:
-                    agentid = str(path[4])
-                    self.handle_delete_agent(agentid)
-                    resvalid = True
+                    agentid = int(path[4])
+                    resvalid, ret = self.handle_delete_agent(agentid)
                 except ValueError:
                     pass
 
         if resvalid:
-            ret = "Ressource deleted"
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(ret.encode())
         else:
-            ret = "Method Not Allowed"
             self.send_response(405)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
@@ -285,11 +282,17 @@ class AgencyHandler(server.BaseHTTPRequestHandler):
         self.server.agency.lock.acquire()
         handler = self.server.agency.local_agents.get(agentid, None)
         if handler is None:
-            pass
+            logging.error("Agency: Agent with id='%s' does not exist. "
+                         "Can't perform DELETE.", agentid)
+            deleted = False
+            msg = "Resource not found"
         else:
             handler.proc.terminate()
             del self.server.agency.local_agents[agentid]
+            deleted = True
+            msg = "Resource deleted"
         self.server.agency.lock.release()
+        return deleted, msg
 
 
 class AgentHandler:
@@ -409,6 +412,9 @@ class Agency:
         """
         executes agent in seperate process
         """
+        # make child process handle signals with default handler
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
         ag_handler = AgentHandler()
         p = multiprocessing.Process(target=agent_starter, args=(self.ag_class, agentinfo,
                                     self.mas_name, self.mas_custom,
@@ -418,6 +424,9 @@ class Agency:
         self.lock.acquire()
         self.local_agents[agentinfo.id] = ag_handler
         self.lock.release()
+        # reset signal handler
+        signal.signal(signal.SIGINT, self.terminate)
+        signal.signal(signal.SIGTERM, self.terminate)
         logging.info("Agency: Started agent "+str(agentinfo.id))
 
     def listen(self):

@@ -387,7 +387,7 @@ class Agency:
             logging.error("Agency: Received invalid agency info from AMS")
             return
 
-        x = threading.Thread(target=self.listen, daemon=True)
+        x = threading.Thread(target=self.send_msg, daemon=True)
         x.start()
         y = threading.Thread(target=logger.send_logs,
                              args=(self.info.masid, self.logger_config, self.log_out,),
@@ -399,7 +399,7 @@ class Agency:
         y.start()
         self.start_agents()
         time.sleep(2)
-        self.send_msg()
+        self.listen()
 
     def start_agents(self):
         """

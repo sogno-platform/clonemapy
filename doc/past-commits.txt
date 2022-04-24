@@ -1,0 +1,167 @@
+I, Stefan Daehling hereby sign-off-by all of my past commits to this repo subject to the Developer Certificate of Origin (DCO), Version 1.1. In the past I have used emails: stefan.daehling@rwth-aachen.de
+
+6d431d437bab338b91e82e4f82c7bb0f565f0f70 server is now executed in main thread
+
+ce5adbe8aa9406ed601585d302d5552b37c2803e fix agent deletion; fix signal handling
+
+f74b1ee0e62b23d2216fa26040f7477a4ce2f25c change path to new github location
+
+440b1bf3ad13815794660760a412361dfc526a0b make mas id , name and custom accessible in agent
+
+4c81a2859278e691d18eec4475640d5907014e38 fix wrong if statement in logger
+
+cc7846bf4777e7229e01b1c43b6a454debdcefe2 consider log config about topics
+
+7cfe87f44cd16a982155744ed72c27522dab0fb1 log level to debug when logging in stdout
+
+c4e075507916fd1b5ae0f5be98af47b38e0bae72 make log data optional
+
+6d96905bc4a199a5f1bdeb3d2f569f93026383c7 improve agent log output; more error logging
+
+ec18ff89e8a43ef3d30d00089b3009ec792fae21 some fixes and correct message log string format
+
+4b47b2c1e7bd53c16c56fd534c286f097836a200 fixes and ams function to delete all mass
+
+f6da84c9db9b91f3d4f2b26c8d4adfabe752377c automatic msg logging
+
+0ba193010f75a391cefca121228339a7137e35f4 timeseries logging
+
+876721d8e4147c75ba594fd9fe7ae978852156f2 extend ams client
+
+b12e3469a9a0b91d4ede9b3e0f8edb45ad95a832 make host an argument in ams client
+
+c8e7a789e0a86ee80a29b4b9895e6079a453ca14 fix old json method
+
+ae1cfb93621cb0a66703c166cffdbaa3a4090202 add custom config behavior
+
+5b84bdde1f6c399e62fc5b047cd2f4914abfd4ba complete logger and df client
+
+60367fbcc6f4ececc3e96cf2b840a29cf3b2c68f completed ams client
+
+0d40040304701a2af6dbea2e20d9a7e78ade1f5d update ams client
+
+13ace803baaa062771d61539928ae3a8a6f315f6 use pydantic data models
+
+2679779044af37e33e6070850020bb3f94e2f63b ci fix
+
+92b247ff7c037d0fcd49b69b3ff8f16064d0db31 update ci
+
+5268370410b6edb3fe15b8bdc62d2d1095bf3152 rename cmapy to clonemapy
+
+5d7207f770dc288d05ab484a388c476d455d3ddd update datamodels
+
+33108aae9421c6e34cc812685af0082dd60fd341 refactoring
+
+40c59b8be50358dd7bf503e1c3d6dafb4abd2d97 add endpoint to update custom
+
+f218b9b8a892becffce42609b0832d00d25acd3a fix install requires
+
+af7a27402c4a629aecd5b694b9853dcb46c12a49 handle sigint and sigterm
+
+420e192c79ae16daf741b7a8985b7b226a6d5949 style fixes
+
+c55386ecddd8de58b43aa850de81a79cd0593df6 mqtt default behavior
+
+62cc03e139ad20bcab8109a5e9ffbab9bbb57f58 remove output
+
+9e33aa3b356eb31572b83dc72b793f2f8cf7da35 acl and mqtt behavior
+
+8a1017274bae8b29d7a4acb793bc8505255d2e9a work on behaviors
+
+083926730a44320741a0cd001cd5154af849c22d docu; move agent funcs in separate classes
+
+69a7dbe9370313ac1e7fd3bac65a5a3b19c51f5a delete agent
+
+a1d62e8e218f446c2abc052b93f02cf315df504d add mqtt method to get latest msg
+
+ba320906300d44237c164d6424ebd93148bcc0fb convert mqtt payload
+
+85401c8e987cab5c9bb343d879338000ff162778 ams client fix
+
+3f4f042a80699bd688fe6371d206466e05208d02 new test
+
+7f36e48e0b4bd65db2b426bf19a8af05898a95a6 new test
+
+4023232c862e9a134a06891111af913f2bf87a56 fix
+
+6233b61332f91d3deb90a635f08712098b14c76a fix
+
+d88624f96ce654328490187aa548c483b0d9851b turn off http logging
+
+b1559cae900aa5e9b908f93451e0be4fe4ef144c add dependencies to setup
+
+23fa92a8f3a9d8a2a5e11fd41efc916dc968b794 add setup.py
+
+064ec24d5c9fbd4eea08756006bec8a06097995d more error handling
+
+fae2ca9dbfcdf14a09469445e8f8f2fe084f8508 add skeleton for all api methods
+
+e8cfff97253bf6ffe27c4b2122e399c38551e6f7 started error handling
+
+56dbf869cfa0516bbaf323f9c74e2cb34ce4d65c fix
+
+35b03abc77a7a55d6c053838fdb819a8b8f650ac fix
+
+1470a1e1a0f79b056a5fdeb7e582ab612306d31a agency get fix
+
+f237c5611af621d8a3b8d436297c4e803095b1b9 benchmark fixes
+
+85b385acc73fe84d358141b9081ce7b1efca1625 ci fix
+
+c7b3d11f0ad68a559c98e5c521fb711527e5ecbf yaml syntax fix
+
+7d878e31d55de0c935462406c3b0277daf7e2a86 spaces
+
+60eaa1824d13f4b1b72236a904f3d3abe644135b new line
+
+817bf85c3fd2e138ff6fd98784ebe75160460c54 add ci
+
+65cf0fd11ccc24fba8d6830f15d8f5b7aaeeb611 added license
+
+c8374a5766882ad55a3ba3d6479e332fd753da33 benchmark behavior
+
+297d435dbe851edb03bd1147e1045f65be426e00 usage of new schemas
+
+6204a51d8058e9c93a47cb9a315e0db5d7feb525 add logger
+
+09688b31fe40f97b15af6ecc60cafe305030a0ad documentation
+
+105a520a7f5fc955b66f06472fe3b62fa433992c usage of mqtt in agent
+
+e500da276a2160447e474e6cb030faccb691a245 started mqtt
+
+544eab573e07e783f8c13191069db7122aac31c9 debug output
+
+80b791c9f06db2fe423e26313cdcc98b22d96cf8 agent functions for df
+
+e3ec08eb19ef2d158efb25f50132290f7d086857 df client
+
+85bfa0ffaae1d7700310b3bc673258e152f89d32 debug output
+
+90b47ec818cd8666ab9500b3261d8cd6985771ee send logs; agent add logs
+
+371ee71348f3c334d3e9313b5eca273e9d8012ec logger client
+
+fdde1fb77506d85a13dc4658c9cce3708a301fc9 documentation
+
+49bff49700f1ee698643fc86fbe6d4654a0df9a8 handling of incoming messages
+
+a3c1f7e67f2605bb6e9b7a840ac55fd025c372dd first working example of message exchange
+
+74d4310798e25d9892bf57bd6c1584a4363e9c08 message exchange
+
+02a358ad34daaf52951715e74b812e040b754cfe message receiving
+
+93c15ab844de71168e9c39863a4bf7ed83ee07d3 added dockerfile
+
+d8074ae041dbbd5345745c14c3612c41eedfc5f5 from json to schemas
+
+9a0c152e57e7c53fc2316b25038c7f3a57a6c8a2 conversion of schemas to json
+
+afd24a5131887a617c6d22f6c643a53a4c43f886 started with schemas
+
+18ddea5c84e643396f9d1278a0813db5cfb4c5e9 basic server skeleton
+
+I, Stefan Dähling hereby sign-off-by all of my past commits to this repo subject to the Developer Certificate of Origin (DCO), Version 1.1. In the past I have used emails: stefan.daehling@rwth-aachen.de
+
+a0126e41b30e586c6d328b7ad26d77ad76dbfa52 Initial commit

@@ -392,7 +392,7 @@ class MQTT():
         if not self._on:
             return
         self._client.publish(topic, payload, qos, retain)
-        self._logger.new_log("msg", "MQTT publish", "Topic: "+topic+";Content: "+payload)
+        self._logger.new_log("msg", "MQTT publish", "Topic: "+str(topic)+";Content: "+str(payload))
 
     def recv_msg(self) -> mqtt.MQTTMessage:
         """
